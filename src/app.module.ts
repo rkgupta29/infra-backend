@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { SeederService } from './database/seeder.service';
+import { SocialProfilesModule } from './social-profiles/social-profiles.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { SeederService } from './database/seeder.service';
     PrismaModule,
     AuthModule,
     AdminModule,
+    SocialProfilesModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeederService],
