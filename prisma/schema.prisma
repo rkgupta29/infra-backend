@@ -14,11 +14,19 @@ datasource db {
 }
 
 
-model User {  
-    id     String   @id @default(auto()) @map("_id") @db.ObjectId  
-    email  String   @unique  
-    name   String?  
-    birthYear  Int?  
-    createdAt  DateTime  @default(now())  
-    updatedAt  DateTime  @updatedAt
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+}
+
+model Admin {  
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId  
+    email     String   @unique  
+    name      String
+    password  String
+    role      UserRole @default(ADMIN)
+    createdAt DateTime @default(now())  
+    updatedAt DateTime @updatedAt
+    
+    @@map("admins")
 }

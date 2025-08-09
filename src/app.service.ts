@@ -8,12 +8,4 @@ export class AppService {
     return 'Hello World!';
   }
 
-  async getUsers() {
-    return this.prisma.user.findMany();
-  }
-
-  async createUser(userData: { email: string; name?: string; birthYear?: number }) {
-    return this.prisma.user.create({ data: userData });
-  }
-  
 }
