@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { SeederService } from './database/seeder.service';
 import { SocialProfilesModule } from './social-profiles/social-profiles.module';
+import { OrganisationModule } from './organisation/organisation.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { SocialProfilesModule } from './social-profiles/social-profiles.module';
     AuthModule,
     AdminModule,
     SocialProfilesModule,
+    OrganisationModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeederService],

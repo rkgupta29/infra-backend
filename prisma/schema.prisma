@@ -41,3 +41,19 @@ model SocialProfile {
 
   @@map("social_profiles")
 }
+
+model OrganisationDetails {
+  id                     String   @id @default(auto()) @map("_id") @db.ObjectId
+  singletonKey           String   @unique @default("singleton")
+  address                String   @default("")
+  emails                 String[] @default([])
+  phones                 String[] @default([])
+  locationMapUrl         String   @default("")
+  companyTagline         String   @default("")
+  vision  String         @default("")
+  mission String         @default("")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("organisation_details")
+}

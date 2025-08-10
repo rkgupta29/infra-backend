@@ -29,6 +29,7 @@ async function bootstrap() {
     .addTag('Authentication', 'Admin authentication endpoints')
     .addTag('Admin Management', 'CRUD operations for admin users')
     .addTag('Social Profiles', 'CRUD for social media profiles')
+    .addTag('Organisation', 'Organisation details (public read, admin write)')
     .addBearerAuth(
       {
         type: 'http',
