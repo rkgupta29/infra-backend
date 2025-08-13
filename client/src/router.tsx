@@ -1,20 +1,35 @@
-import { createRootRoute, createRoute, createRouter, Outlet, Link } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter, Outlet, useRouterState } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import Home from './pages/Home'
 import About from './pages/About'
 import Contact from './pages/Contact'
+import Login from './pages/Login'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Sidebar, SidebarHeader, SidebarProvider } from './components/ui/sidebar'
 
 function RootLayout() {
+  const queryClient = new QueryClient()
+
+  function LayoutWithSidebar() {
+    const { location } = useRouterState()
+    const isLogin = location.pathname === '/login'
+    return (
+      <SidebarProvider>
+        {!isLogin && (
+          <Sidebar>
+          <SidebarHeader className='text-2xl font-bold'>TFI Admin</SidebarHeader>
+          </Sidebar>
+        )}
+        <Outlet />
+        <TanStackRouterDevtools position="bottom-right" />
+      </SidebarProvider>
+    )
+  }
+
   return (
-    <div>
-      <nav style={{ display: 'flex', gap: '12px', padding: '12px 0' }}>
-        <Link to="/" activeProps={{ style: { fontWeight: 'bold' } }}>Home</Link>
-        <Link to="/about" activeProps={{ style: { fontWeight: 'bold' } }}>About</Link>
-        <Link to="/contact" activeProps={{ style: { fontWeight: 'bold' } }}>Contact</Link>
-      </nav>
-      <Outlet />
-      <TanStackRouterDevtools position="bottom-right" />
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <LayoutWithSidebar />
+    </QueryClientProvider>
   )
 }
 
@@ -40,7 +55,13 @@ const contactRoute = createRoute({
   component: Contact,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, aboutRoute, contactRoute])
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: Login,
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, aboutRoute, contactRoute, loginRoute])
 
 export const router = createRouter({
   routeTree,
@@ -51,5 +72,3 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
-
-

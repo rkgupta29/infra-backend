@@ -1,7 +1,15 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
+
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -117,4 +125,8 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.d {
+  border: 1px solid red !important;
 }
