@@ -13,14 +13,13 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { NewsletterSubscriptionModule } from './newsletter_subscription/newsletter_subscription.module';
 import { AssociationsModule } from './associations/associations.module';
+import { MediaCoverageModule } from './media-coverage/media-coverage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
-      
+      isGlobal: true,      
     }),
-  
     PrismaModule,
     AuthModule,
     AdminModule,
@@ -29,6 +28,7 @@ import { AssociationsModule } from './associations/associations.module';
     HomepageModule,
     NewsletterSubscriptionModule,
     AssociationsModule,
+    MediaCoverageModule,
       ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client/dist'),
     }),
