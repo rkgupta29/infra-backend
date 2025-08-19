@@ -8,6 +8,7 @@ import { AdminModule } from './admin/admin.module';
 import { SeederService } from './database/seeder.service';
 import { SocialProfilesModule } from './social-profiles/social-profiles.module';
 import { OrganisationModule } from './organisation/organisation.module';
+import { HomepageModule } from './homepage/homepage.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -23,6 +24,7 @@ import { join } from 'path';
     AdminModule,
     SocialProfilesModule,
     OrganisationModule,
+    HomepageModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client/dist'),
     }),

@@ -57,3 +57,14 @@ model OrganisationDetails {
 
   @@map("organisation_details")
 }
+
+model HomepageSection {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  sectionKey  String   @unique  // e.g., "hero", "about", "features", etc.
+  data        Json     // Completely flexible JSON structure for each section
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("homepage_sections")
+}

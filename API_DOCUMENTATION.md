@@ -200,6 +200,49 @@ enum UserRole {
 }
 ```
 
+## Homepage Content Management
+
+The Homepage Content Management API provides flexible content management for your website's homepage sections.
+
+### Base URL
+```
+/content/home
+```
+
+### Endpoints
+
+#### GET /content/home
+Get all homepage sections (public)
+
+#### GET /content/home/:key
+Get a specific homepage section by key (public)
+
+#### PATCH /content/home/:key
+Update a homepage section completely (ADMIN/SUPERADMIN)
+
+#### PATCH /content/home/:key/fields
+Update specific fields in a homepage section (ADMIN/SUPERADMIN)
+
+#### PATCH /content/home/:key/toggle
+Toggle section active status (ADMIN/SUPERADMIN)
+
+#### DELETE /content/home/:key
+Delete a homepage section (ADMIN/SUPERADMIN)
+
+### HomepageSection Model
+```typescript
+{
+  id: string;          // MongoDB ObjectId
+  sectionKey: string;  // Unique identifier for the section
+  data: object;        // Flexible JSON data for the section
+  active: boolean;     // Whether the section is active
+  createdAt: Date;     // Creation timestamp
+  updatedAt: Date;     // Last update timestamp
+}
+```
+
+**Note:** For detailed documentation and examples, see [HOMEPAGE_CONTENT_API.md](./HOMEPAGE_CONTENT_API.md)
+
 ## Error Handling
 
 The API returns appropriate HTTP status codes and error messages:
