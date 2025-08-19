@@ -11,6 +11,7 @@ import { OrganisationModule } from './organisation/organisation.module';
 import { HomepageModule } from './homepage/homepage.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { NewsletterSubscriptionModule } from './newsletter_subscription/newsletter_subscription.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { join } from 'path';
     SocialProfilesModule,
     OrganisationModule,
     HomepageModule,
-    ServeStaticModule.forRoot({
+    NewsletterSubscriptionModule,
+      ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client/dist'),
     }),
   ],

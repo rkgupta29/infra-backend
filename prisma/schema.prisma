@@ -68,3 +68,14 @@ model HomepageSection {
 
   @@map("homepage_sections")
 }
+
+model NewsletterSubscription {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  email       String   @unique
+  isActive    Boolean  @default(true)
+  subscribedAt DateTime @default(now())
+  unsubscribedAt DateTime?
+  source      String?  // Optional: track where the subscription came from
+  
+  @@map("newsletter_subscriptions")
+}

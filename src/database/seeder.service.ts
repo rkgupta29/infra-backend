@@ -12,7 +12,6 @@ export class SeederService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    // Add delay to ensure database is ready
     setTimeout(() => {
       this.seedSuperAdmin();
     }, 1000);
