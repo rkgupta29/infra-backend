@@ -292,4 +292,24 @@ export class HomepageController {
   async deleteSection(@Param('key') key: string) {
     return this.service.deleteSection(key);
   }
+
+  @Post('/seed')
+  @ApiOperation({
+    summary: 'Seed the homepage with default sections',
+    description: 'Seeds the homepage with default sections. This endpoint requires ADMIN or SUPERADMIN authentication.'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Homepage seeded successfully'
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Invalid or missing JWT token'
+  })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Insufficient permissions'
+  })
+  @HttpCode(HttpStatus.OK)
+  async seedHomepage() {
+    return this.service.seedHomepageContent();
+  }
 }

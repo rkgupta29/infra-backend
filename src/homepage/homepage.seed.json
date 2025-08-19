@@ -1,0 +1,14 @@
+[
+    {
+        "sectionKey": "file",
+        "data": {
+            "title": "New Section",
+            "description": "Description for the new section",
+            "cta": [
+                {
+                    "name": "rakesh"
+                }
+            ]
+        }
+    }
+]

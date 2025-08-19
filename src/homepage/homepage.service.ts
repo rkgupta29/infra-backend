@@ -1,5 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class HomepageService {
@@ -25,8 +27,6 @@ export class HomepageService {
 
     return section;
   }
-
-
 
   /**
    * Get all active sections
@@ -164,5 +164,70 @@ export class HomepageService {
     return this.prisma.homepageSection.delete({
       where: { sectionKey },
     });
+  }
+
+  /**
+   * Seed homepage content from a JSON file and replace all homepage sections.
+   * This will delete all existing homepage sections and re-add them from the JSON file.
+   * The JSON file should be in the same folder and named "homepage.seed.json".
+   */
+ 
+
+  async seedHomepageContent() {
+    // Path to the JSON file in the same folder as this service
+    
+    const filePath = path.join(process.cwd(), 'src', 'homepage', 'homepage.seed.json');
+    if (!fs.existsSync(filePath)) {
+      throw new NotFoundException('Seed file homepage.seed.json not found');
+    }
+
+    let jsonData: any;
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      jsonData = JSON.parse(fileContent);
+    } catch (err) {
+      throw new BadRequestException('Failed to read or parse homepage.seed.json');
+    }
+
+    if (!Array.isArray(jsonData)) {
+      throw new BadRequestException('Seed file must contain an array of sections');
+    }
+
+    // Validate each section
+    for (const section of jsonData) {
+      if (
+        !section.sectionKey ||
+        typeof section.sectionKey !== 'string' ||
+        !section.data ||
+        typeof section.data !== 'object' ||
+        section.data === null ||
+        Array.isArray(section.data)
+      ) {
+        throw new BadRequestException(
+          `Invalid section format in seed file for sectionKey: ${section.sectionKey}`
+        );
+      }
+    }
+
+    await this.prisma.homepageSection.deleteMany({});
+
+    const createdSections: any[] = [];
+    for (const section of jsonData) {
+      createdSections.push(
+        await this.prisma.homepageSection.create({
+          data: {
+            sectionKey: section.sectionKey,
+            data: section.data,
+            active: section.active !== undefined ? section.active : true,
+          },
+        })
+      );
+    }
+
+    return {
+      message: 'Homepage content seeded successfully',
+      count: createdSections.length,
+      sections: createdSections,
+    };
   }
 }
