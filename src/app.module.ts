@@ -14,6 +14,16 @@ import { join } from 'path';
 import { NewsletterSubscriptionModule } from './newsletter_subscription/newsletter_subscription.module';
 import { AssociationsModule } from './associations/associations.module';
 import { MediaCoverageModule } from './media-coverage/media-coverage.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
+import { TrusteesModule } from './teams/trustees/trustees.module';
+import { PatronsModule } from './teams/patrons/patrons.module';
+import { TeamModule } from './teams/team/team.module';
+import { FellowModule } from './teams/fellow/fellow.module';
+import { AdvisorsModule } from './teams/advisors/advisors.module';
+import { GalleryModule } from './achives/gallery/gallery.module';
+import { VideosModule } from './achives/videos/videos.module';
+import { ResearchPapersModule } from './knowledge/research-papers/research-paper.module';
+import { KnowledgeConversationModule } from './knowledge/conversation/conversation.module';
 
 @Module({
   imports: [
@@ -29,9 +39,19 @@ import { MediaCoverageModule } from './media-coverage/media-coverage.module';
     NewsletterSubscriptionModule,
     AssociationsModule,
     MediaCoverageModule,
+    NewsletterModule,
+    AdvisorsModule,
+    TeamModule,
+    FellowModule,
       ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client/dist'),
     }),
+    TrusteesModule,
+    PatronsModule,
+    GalleryModule,
+    VideosModule,
+    ResearchPapersModule,
+    KnowledgeConversationModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeederService],

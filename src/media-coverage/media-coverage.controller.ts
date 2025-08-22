@@ -7,8 +7,8 @@ import {
 } from '@nestjs/swagger';
 import { MediaCoverageService } from './media-coverage.service';
 
-@ApiTags('Media Coverage')
-@Controller('media-coverage')
+@ApiTags('Archives')
+@Controller('archives/media-coverage')
 export class MediaCoverageController {
   constructor(private readonly service: MediaCoverageService) {}
 
