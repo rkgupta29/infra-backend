@@ -79,3 +79,17 @@ model NewsletterSubscription {
   
   @@map("newsletter_subscriptions")
 }
+
+model LatestUpdate {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  image     String
+  category  String
+  title     String
+  btnTitle  String
+  link      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("latest_updates")
+}

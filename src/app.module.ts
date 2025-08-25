@@ -24,6 +24,7 @@ import { GalleryModule } from './achives/gallery/gallery.module';
 import { VideosModule } from './achives/videos/videos.module';
 import { ResearchPapersModule } from './knowledge/research-papers/research-paper.module';
 import { KnowledgeConversationModule } from './knowledge/conversation/conversation.module';
+import { EngagementsModule } from './outreach-and-engagements/engagements.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { KnowledgeConversationModule } from './knowledge/conversation/conversati
       rootPath: join(__dirname, '..', 'client/dist'),
     }),
     TrusteesModule,
+    EngagementsModule ,
     PatronsModule,
     GalleryModule,
     VideosModule,
