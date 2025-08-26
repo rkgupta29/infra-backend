@@ -93,29 +93,7 @@ export class CategoriesController {
     return this.categoriesService.findAll(activeOnly === true);
   }
 
-  /**
-   * Get a specific category by ID
-   * This endpoint is public and returns the category data
-   */
-  @Get(':id')
-  @ApiOperation({
-    summary: 'Get a specific category by ID',
-    description: 'Retrieves a specific category by its ID. This endpoint is public and does not require authentication.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'The ID of the category to retrieve',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Category retrieved successfully',
-  })
-  @ApiNotFoundResponse({
-    description: 'Category not found',
-  })
-  findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(id);
-  }
+
 
   /**
    * Get a specific category by slug

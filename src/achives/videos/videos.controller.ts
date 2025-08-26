@@ -135,29 +135,6 @@ export class VideosController {
     return this.videosService.getVideosByCategory(categoryId, activeOnly === true);
   }
 
-  /**
-   * Get a specific video by ID
-   * This endpoint is public and returns the video data
-   */
-  @Get(':id')
-  @ApiOperation({
-    summary: 'Get a specific video by ID',
-    description: 'Retrieves a specific video by its ID. This endpoint is public and does not require authentication.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'The ID of the video to retrieve',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Video retrieved successfully',
-  })
-  @ApiNotFoundResponse({
-    description: 'Video not found',
-  })
-  findOne(@Param('id') id: string) {
-    return this.videosService.findOne(id);
-  }
 
   /**
    * Update a video
@@ -265,19 +242,4 @@ export class VideosController {
     return this.videosService.remove(id);
   }
 
-  /**
-   * Legacy endpoint for backward compatibility
-   */
-  @Get('legacy/all')
-  @ApiOperation({
-    summary: 'Get all videos (legacy endpoint)',
-    description: 'Retrieves all videos using the legacy format. This endpoint is for backward compatibility.',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'All videos retrieved successfully',
-  })
-  getVideos() {
-    return this.videosService.getVideos();
-  }
 }

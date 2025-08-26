@@ -184,27 +184,4 @@ export class VideosService {
     return this.findAll(activeOnly, categoryId);
   }
 
-  /**
-   * Legacy method for backward compatibility
-   * @returns Static videos data
-   */
-  async getVideos() {
-    const videos: any[] =  [
-      {
-        image: "/assets/archive/video/pratapPadode.jpg",
-        subtitle: "The Infravision Conversation",
-        subdesc:
-          "Pratap Padode discusses India's urban infrastructure challenges and project completion hurdles.",
-        link: "https://www.youtube.com/embed/w6oJTRqeB4A?si=fNSLkZPbNsVTcCy8",
-        date: "June 10, 2025",
-      },
-      // ... rest of the static videos array
-    ];
-
-    return {
-      videos,
-      totalCount: videos.length,
-      lastUpdated: new Date().toISOString()
-    };
-  }
 }
