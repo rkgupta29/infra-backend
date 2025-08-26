@@ -22,6 +22,7 @@ import { FellowModule } from './teams/fellow/fellow.module';
 import { AdvisorsModule } from './teams/advisors/advisors.module';
 import { GalleryModule } from './achives/gallery/gallery.module';
 import { VideosModule } from './achives/videos/videos.module';
+import { CategoriesModule } from './achives/categories/categories.module';
 import { ResearchPapersModule } from './knowledge/research-papers/research-paper.module';
 import { KnowledgeConversationModule } from './knowledge/conversation/conversation.module';
 import { EngagementsModule } from './outreach-and-engagements/engagements.module';
@@ -52,6 +53,7 @@ import { EngagementsModule } from './outreach-and-engagements/engagements.module
     PatronsModule,
     GalleryModule,
     VideosModule,
+    CategoriesModule,
     ResearchPapersModule,
     KnowledgeConversationModule,
   ],

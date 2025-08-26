@@ -93,3 +93,34 @@ model LatestUpdate {
 
   @@map("latest_updates")
 }
+
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  videos      Video[]  @relation(fields: [videoIds], references: [id])
+  videoIds    String[] @db.ObjectId
+
+  @@map("categories")
+}
+
+model Video {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  image       String
+  title       String
+  subtitle    String?
+  description String
+  link        String
+  date        DateTime
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  categories  Category[] @relation(fields: [categoryIds], references: [id])
+  categoryIds String[]   @db.ObjectId
+
+  @@map("videos")
+}
