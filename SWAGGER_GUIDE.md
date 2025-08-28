@@ -9,7 +9,7 @@ This admin panel backend now includes comprehensive Swagger/OpenAPI documentatio
 Once the application is running, you can access the Swagger documentation at:
 
 ```
-http://localhost:3000/docs
+http://localhost:4000/docs
 ```
 
 ## Features
@@ -61,10 +61,13 @@ http://localhost:3000/docs
 6. Copy the `access_token` from the response
 
 ### Step 2: Authorize
-1. Click the "Authorize" button at the top of the page
-2. Paste your JWT token in the "Value" field
-3. Click "Authorize"
-4. Click "Close"
+1. Click the "Authorize" button at the top of the page (the lock icon)
+2. You'll see a dialog titled "Available authorizations"
+3. In the input field under "Value", enter your token with the format: `Bearer your_token_here`
+   - Example: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+   - Make sure to include the word "Bearer" followed by a space before your token
+4. Click "Authorize"
+5. Click "Close"
 
 ### Step 3: Test Endpoints
 Now you can test any endpoint. The JWT token will be automatically included in the Authorization header.
@@ -165,7 +168,7 @@ SUPERADMIN_PASSWORD="SuperAdmin@123"
 SUPERADMIN_NAME="Super Administrator"
 
 # Application
-PORT=3000
+PORT=4000
 NODE_ENV="development"
 ```
 
@@ -193,7 +196,7 @@ NODE_ENV="development"
 
 5. **Access Swagger UI:**
    ```
-   http://localhost:3000/docs
+   http://localhost:4000/docs
    ```
 
 ## Swagger Configuration Details

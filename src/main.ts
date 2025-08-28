@@ -30,7 +30,7 @@ async function bootstrap() {
     .addTag('Admin Management', 'CRUD operations for admin users')
     .addTag('Social Profiles', 'CRUD for social media profiles')
     .addTag('Organisation', 'Organisation details (public read, admin write)')
-    .addBearerAuth()
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'JWT-auth')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

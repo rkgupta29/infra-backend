@@ -4,7 +4,7 @@
 This is a secure admin panel backend built with NestJS, Prisma, and MongoDB. It supports two user roles: SUPERADMIN and ADMIN.
 
 ## 📖 Interactive Documentation
-**Swagger UI is available at: `http://localhost:3000/docs`**
+**Swagger UI is available at: `http://localhost:4000/docs`**
 
 The Swagger documentation provides:
 - Interactive API testing
@@ -32,7 +32,7 @@ SUPERADMIN_PASSWORD="SuperAdmin@123"
 SUPERADMIN_NAME="Super Administrator"
 
 # Application
-PORT=3000
+PORT=4000
 NODE_ENV="development"
 ```
 

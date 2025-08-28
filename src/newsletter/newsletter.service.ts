@@ -1,14 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { PaginationDto } from './dto/pagination.dto';
+import { PaginatedResult } from '../types/utils';
 
 @Injectable()
 export class NewsletterService {
-  /**
-   * Get newsletter content
-   * @returns Static newsletter content
-   */
-  async getNewsletter() {
-    return {
-      articles: [
+  // Store all newsletter articles
+  private readonly newsletters = [
         {
           id: 27,
           img: "/assets/archive/newsletter/agustNewsletter.png",
@@ -309,7 +306,34 @@ export class NewsletterService {
           link: "/assets/pdf/letter24.pdf",
         },
       
-      ],
+      ];
+  
+  /**
+   * Get newsletter content with pagination
+   * @param paginationDto Pagination parameters
+   * @returns Paginated newsletter content
+   */
+  async getNewsletter(paginationDto: PaginationDto): Promise<PaginatedResult<any>> {
+    const { page = 1, limit = 10 } = paginationDto;
+    
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+    const total = this.newsletters.length;
+    const totalPages = Math.ceil(total / limit);
+    
+    // Get paginated data
+    const paginatedNewsletters = this.newsletters.slice(skip, skip + limit);
+    
+    return {
+      data: paginatedNewsletters,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 }
