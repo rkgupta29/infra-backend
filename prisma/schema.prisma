@@ -124,3 +124,33 @@ model Video {
 
   @@map("videos")
 }
+
+model Sector {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  name        String           @unique
+  slug        String           @unique
+  description String?
+  active      Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  papers      ResearchPaper[]  @relation(fields: [paperIds], references: [id])
+  paperIds    String[]         @db.ObjectId
+
+  @@map("sectors")
+}
+
+model ResearchPaper {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  image       String
+  title       String
+  description String
+  link        String
+  date        DateTime
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  sectors     Sector[]   @relation(fields: [sectorIds], references: [id])
+  sectorIds   String[]   @db.ObjectId
+
+  @@map("research_papers")
+}

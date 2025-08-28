@@ -9,14 +9,15 @@ export const useLogin = () => {
     mutationFn: async (credentials: LoginRequest): Promise<LoginResponse> => {
       const response = await apiRequest<LoginResponse, LoginRequest>("POST", '/auth/login', credentials);
       
-      if (response.token) {
-        Cookies.set('auth_token', response.token, { expires: 7 }); // Expires in 7 days
+      if (response.access_token) {
+        Cookies.set('auth_token', response.access_token, { expires: 7 }); // Expires in 7 days
       }
       
       return response;
     },
   });
 };
+
 
 // Logout function
 export const logout = () => {

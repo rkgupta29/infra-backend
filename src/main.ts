@@ -15,9 +15,9 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS if needed
+  // Enable CORS for all origins
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: true,
     credentials: true,
   });
 
@@ -30,17 +30,7 @@ async function bootstrap() {
     .addTag('Admin Management', 'CRUD operations for admin users')
     .addTag('Social Profiles', 'CRUD for social media profiles')
     .addTag('Organisation', 'Organisation details (public read, admin write)')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -50,8 +40,8 @@ async function bootstrap() {
     },
   });
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
+  const port = 4000 
+   await app.listen(port);
   console.log(`🚀 Admin Panel Backend running on port ${port}`);
   console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📖 Swagger documentation available at http://localhost:${port}/docs`);

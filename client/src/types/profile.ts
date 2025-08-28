@@ -4,7 +4,13 @@ export interface User {
 }
 
 export interface LoginResponse {
-  token: string;
+  access_token: string;
+  admin: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+  };
 }
 
 export interface LoginRequest {
