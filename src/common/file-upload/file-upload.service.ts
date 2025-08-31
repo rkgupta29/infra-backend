@@ -76,7 +76,7 @@ export class FileUploadService {
       this.logger.log(`PDF file uploaded successfully: ${fullPath}`);
       
       // Return the URL path that can be stored in the database
-      return `/${this.UPLOAD_DIR}/${relativePath}`;
+      return `/assets/${relativePath}`;
     } catch (error) {
       this.logger.error(`Failed to upload PDF file: ${error.message}`);
       throw new BadRequestException('Failed to upload PDF file');
@@ -119,7 +119,7 @@ export class FileUploadService {
       this.logger.log(`Image file uploaded successfully: ${fullPath}`);
       
       // Return the URL path that can be stored in the database
-      return `/${this.UPLOAD_DIR}/${relativePath}`;
+      return `/assets/${relativePath}`;
     } catch (error) {
       this.logger.error(`Failed to upload image file: ${error.message}`);
       throw new BadRequestException('Failed to upload image file');

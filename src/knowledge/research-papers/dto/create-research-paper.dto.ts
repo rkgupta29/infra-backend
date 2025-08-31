@@ -3,14 +3,6 @@ import { IsArray, IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsString } fr
 
 export class CreateResearchPaperDto {
   @ApiProperty({
-    description: 'The image URL for the research paper',
-    example: '/assets/knowledge/researchPapers/01.jpg',
-  })
-  @IsString()
-  @IsNotEmpty()
-  image: string;
-
-  @ApiProperty({
     description: 'The title of the research paper',
     example: 'Study on the implementation of compensatory afforestation in India',
   })
@@ -25,14 +17,6 @@ export class CreateResearchPaperDto {
   @IsString()
   @IsNotEmpty()
   description: string;
-
-  @ApiProperty({
-    description: 'The link to the research paper PDF',
-    example: '/assets/pdf/Study-on-Implementation-of-Compensatory-Afforestation-in-India.pdf',
-  })
-  @IsString()
-  @IsNotEmpty()
-  link: string;
 
   @ApiProperty({
     description: 'The publication date of the research paper',

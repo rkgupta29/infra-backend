@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateResearchPaperDto } from './dto/create-research-paper.dto';
 import { UpdateResearchPaperDto } from './dto/update-research-paper.dto';
 import { SectorsService } from '../sectors/sectors.service';
+import { FileUploadService } from '../../common/file-upload/file-upload.service';
+import type { Multer } from 'multer';
 
 // Note: This is a temporary workaround until the Prisma client is regenerated
 // after adding the ResearchPaper model to the schema
@@ -12,37 +14,95 @@ interface ExtendedPrismaService extends PrismaService {
 
 @Injectable()
 export class ResearchPapersService {
+  private readonly logger = new Logger(ResearchPapersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly sectorsService: SectorsService,
+    private readonly fileUploadService: FileUploadService,
   ) {}
 
   /**
    * Create a new research paper
    * @param createResearchPaperDto - Data for the new research paper
+   * @param files - Uploaded files (image and PDF)
    * @returns The created research paper
    */
-  async create(createResearchPaperDto: CreateResearchPaperDto) {
-    // Validate that all sectors exist
-    await this.sectorsService.validateSectorIds(createResearchPaperDto.sectorIds);
+  async create(
+    createResearchPaperDto: CreateResearchPaperDto,
+    files: {
+      imageFile?: Multer.File[],
+      pdfFile?: Multer.File[],
+    },
+  ) {
+    try {
+      // Ensure sectorIds is an array
+      const sectorIds = Array.isArray(createResearchPaperDto.sectorIds)
+        ? createResearchPaperDto.sectorIds
+        : [createResearchPaperDto.sectorIds].filter(Boolean);
+      
+      if (!sectorIds.length) {
+        throw new BadRequestException('At least one sector ID is required');
+      }
+      
+      // Validate that all sectors exist
+      await this.sectorsService.validateSectorIds(sectorIds);
 
-    // Parse date string to Date object
-    const date = new Date(createResearchPaperDto.date);
+      // Validate files
+      if (!files.imageFile || files.imageFile.length === 0) {
+        throw new BadRequestException('Image file is required');
+      }
+      
+      if (!files.pdfFile || files.pdfFile.length === 0) {
+        throw new BadRequestException('PDF file is required');
+      }
+      
+      const imageFile = files.imageFile[0];
+      const pdfFile = files.pdfFile[0];
+      
+      // Generate filenames based on title
+      const sanitizedTitle = createResearchPaperDto.title
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .substring(0, 50); // Limit length
+      
+      // Upload files
+      const imageUrl = await this.fileUploadService.uploadImage(
+        imageFile, 
+        `research-paper-${sanitizedTitle}`
+      );
+      
+      const pdfUrl = await this.fileUploadService.uploadPdf(
+        pdfFile, 
+        `research-paper-${sanitizedTitle}`
+      );
 
-    return (this.prisma as ExtendedPrismaService).researchPaper.create({
-      data: {
-        image: createResearchPaperDto.image,
-        title: createResearchPaperDto.title,
-        description: createResearchPaperDto.description,
-        link: createResearchPaperDto.link,
-        date,
-        active: createResearchPaperDto.active !== undefined ? createResearchPaperDto.active : true,
-        sectorIds: createResearchPaperDto.sectorIds,
-      },
-      include: {
-        sectors: true, // Include related sectors
-      },
-    });
+      // Parse date string to Date object
+      const date = new Date(createResearchPaperDto.date);
+
+      // Create research paper with file URLs
+      const researchPaper = await (this.prisma as ExtendedPrismaService).researchPaper.create({
+        data: {
+          image: imageUrl,
+          title: createResearchPaperDto.title,
+          description: createResearchPaperDto.description,
+          link: pdfUrl,
+          date,
+          active: createResearchPaperDto.active !== undefined ? createResearchPaperDto.active : true,
+          sectorIds: sectorIds,
+        },
+        include: {
+          sectors: true, // Include related sectors
+        },
+      });
+      
+      this.logger.log(`Created new research paper: ${createResearchPaperDto.title}`);
+      return researchPaper;
+    } catch (error) {
+      this.logger.error(`Failed to create research paper: ${error.message}`);
+      throw error;
+    }
   }
 
   /**

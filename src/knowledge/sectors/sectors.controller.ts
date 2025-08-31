@@ -34,7 +34,7 @@ export class SectorsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Create a new sector',
     description: 'Creates a new sector for research papers. Requires admin privileges.',
@@ -109,7 +109,7 @@ export class SectorsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update a sector',
     description: 'Updates a specific sector by its ID. Requires admin privileges.',
@@ -134,7 +134,7 @@ export class SectorsController {
   @Patch(':id/toggle-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Toggle sector status',
     description: 'Toggles the active status of a specific sector. Requires admin privileges.',
@@ -158,7 +158,7 @@ export class SectorsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Delete a sector',
     description: 'Deletes a specific sector by its ID. Requires admin privileges.',

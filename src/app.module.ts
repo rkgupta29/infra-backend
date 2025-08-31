@@ -47,6 +47,8 @@ import { FileUploadModule } from './common/file-upload/file-upload.module';
     FellowModule,
       ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client/dist'),
+      serveRoot: '/admin',
+      exclude: ['/api*', '/docs*', '/assets*'],
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'assets'),
@@ -55,6 +57,7 @@ import { FileUploadModule } from './common/file-upload/file-upload.module';
         index: false,
         maxAge: '1d',
       },
+      exclude: ['/api*', '/docs*', '/admin*'],
     }),
     TrusteesModule,
     EngagementsModule ,

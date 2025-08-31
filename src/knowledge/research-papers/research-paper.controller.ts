@@ -10,6 +10,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,7 +20,11 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import type { Multer } from 'multer';
 import { ResearchPapersService } from './research-papers.service';
 import { CreateResearchPaperDto } from './dto/create-research-paper.dto';
 import { UpdateResearchPaperDto } from './dto/update-research-paper.dto';
@@ -35,10 +41,52 @@ export class ResearchPapersController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Create a new research paper',
-    description: 'Creates a new research paper. Requires admin privileges.',
+    description: 'Creates a new research paper with file uploads. Requires admin privileges.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        imageFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'Cover image for the research paper',
+        },
+        pdfFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'PDF file of the research paper',
+        },
+        title: {
+          type: 'string',
+          description: 'The title of the research paper',
+        },
+        description: {
+          type: 'string',
+          description: 'The description of the research paper',
+        },
+        date: {
+          type: 'string',
+          description: 'The publication date of the research paper (YYYY-MM-DD)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the research paper is active',
+        },
+        sectorIds: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+          description: 'Array of sector IDs associated with this research paper',
+        },
+      },
+      required: ['imageFile', 'pdfFile', 'title', 'description', 'date', 'sectorIds'],
+    },
   })
   @ApiResponse({
     status: 201,
@@ -47,8 +95,36 @@ export class ResearchPapersController {
   @ApiResponse({ status: 400, description: 'Bad request.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
-  create(@Body() createResearchPaperDto: CreateResearchPaperDto) {
-    return this.service.create(createResearchPaperDto);
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'imageFile', maxCount: 1 },
+      { name: 'pdfFile', maxCount: 1 },
+    ])
+  )
+  create(
+    @Body() body: any,
+    @UploadedFiles()
+    files: {
+      imageFile?: Multer.File[],
+      pdfFile?: Multer.File[],
+    },
+  ) {
+    // Parse form data properly
+    const createResearchPaperDto: CreateResearchPaperDto = {
+      title: body.title,
+      description: body.description,
+      date: body.date,
+      // Parse active as boolean
+      active: body.active === 'true' || body.active === true,
+      // Parse sectorIds as array
+      sectorIds: Array.isArray(body.sectorIds) 
+        ? body.sectorIds 
+        : body.sectorIds?.includes(',') 
+          ? body.sectorIds.split(',') 
+          : [body.sectorIds]
+    };
+    
+    return this.service.create(createResearchPaperDto, files);
   }
 
   @Get()
@@ -160,7 +236,7 @@ export class ResearchPapersController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update a research paper',
     description: 'Updates a specific research paper by its ID. Requires admin privileges.',
@@ -184,7 +260,7 @@ export class ResearchPapersController {
   @Patch(':id/toggle-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Toggle research paper status',
     description: 'Toggles the active status of a specific research paper. Requires admin privileges.',
@@ -208,7 +284,7 @@ export class ResearchPapersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Delete a research paper',
     description: 'Deletes a specific research paper by its ID. Requires admin privileges.',
