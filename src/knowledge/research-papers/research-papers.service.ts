@@ -60,22 +60,25 @@ export class ResearchPapersService {
       const imageFile = files.imageFile[0];
       const pdfFile = files.pdfFile[0];
       
-      // Generate filenames based on title
+      // Generate unique filenames with timestamp and hash
+      const timestamp = Date.now();
+      const imageHash = Math.random().toString(36).substring(2, 10);
+      const pdfHash = Math.random().toString(36).substring(2, 10);
       const sanitizedTitle = createResearchPaperDto.title
         .toLowerCase()
         .replace(/\s+/g, '-')
         .replace(/[^a-z0-9-]/g, '')
-        .substring(0, 50); // Limit length
+        .substring(0, 30); // Shorter title to accommodate hash
       
-      // Upload files
+      // Upload files with unique filenames
       const imageUrl = await this.fileUploadService.uploadImage(
         imageFile, 
-        `research-paper-${sanitizedTitle}`
+        `research-paper-img-${sanitizedTitle}-${timestamp}-${imageHash}`
       );
       
       const pdfUrl = await this.fileUploadService.uploadPdf(
         pdfFile, 
-        `research-paper-${sanitizedTitle}`
+        `research-paper-pdf-${sanitizedTitle}-${timestamp}-${pdfHash}`
       );
 
       // Parse date string to Date object
