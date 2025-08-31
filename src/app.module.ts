@@ -25,6 +25,7 @@ import { VideosModule } from './achives/videos/videos.module';
 import { CategoriesModule } from './achives/categories/categories.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { EngagementsModule } from './outreach-and-engagements/engagements.module';
+import { FileUploadModule } from './common/file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -47,6 +48,14 @@ import { EngagementsModule } from './outreach-and-engagements/engagements.module
       ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client/dist'),
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'assets'),
+      serveRoot: '/assets',
+      serveStaticOptions: {
+        index: false,
+        maxAge: '1d',
+      },
+    }),
     TrusteesModule,
     EngagementsModule ,
     PatronsModule,
@@ -54,6 +63,7 @@ import { EngagementsModule } from './outreach-and-engagements/engagements.module
     VideosModule,
     CategoriesModule,
     KnowledgeModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeederService],
