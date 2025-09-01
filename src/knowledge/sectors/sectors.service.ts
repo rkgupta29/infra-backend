@@ -176,21 +176,26 @@ export class SectorsService {
   async remove(id: string) {
     await this.findOne(id); // Verify it exists
 
-    // Check if any research papers are using this sector
+    // Find all research papers that reference this sector
     const papersWithSector = await (this.prisma as ExtendedPrismaService).researchPaper.findMany({
       where: {
         sectorIds: {
           has: id,
         },
       },
+      select: { id: true, sectorIds: true },
     });
 
-    if (papersWithSector.length > 0) {
-      throw new BadRequestException(
-        `Cannot delete sector because it is used by ${papersWithSector.length} research papers. Please remove the sector from these papers first.`,
-      );
+    // Remove the sector id from each paper's sectorIds array
+    for (const paper of papersWithSector) {
+      const updatedSectorIds = (paper.sectorIds || []).filter((sectorId: string) => sectorId !== id);
+      await (this.prisma as ExtendedPrismaService).researchPaper.update({
+        where: { id: paper.id },
+        data: { sectorIds: updatedSectorIds },
+      });
     }
 
+    // Now delete the sector
     return (this.prisma as ExtendedPrismaService).sector.delete({
       where: { id },
     });

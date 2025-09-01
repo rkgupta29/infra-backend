@@ -97,4 +97,18 @@ export class AuthService {
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 12);
   }
+
+  /**
+   * Verify JWT token and return payload
+   * @param token - JWT token to verify
+   * @returns The decoded token payload
+   */
+  async verifyToken(token: string): Promise<JwtPayload> {
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+      return payload;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
 }

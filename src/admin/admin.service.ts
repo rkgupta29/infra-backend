@@ -178,4 +178,29 @@ export class AdminService {
   async getProfile(currentUser: any) {
     return this.findOne(currentUser.id, currentUser);
   }
+
+  /**
+   * Find admin by ID without authorization checks
+   * @param id - The ID of the admin to find
+   * @returns The admin record without password
+   */
+  async findOneById(id: string) {
+    const admin = await this.prisma.admin.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
+
+    return admin;
+  }
 }

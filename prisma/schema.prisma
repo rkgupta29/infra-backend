@@ -135,6 +135,8 @@ model Sector {
   updatedAt   DateTime         @updatedAt
   papers      ResearchPaper[]  @relation(fields: [paperIds], references: [id])
   paperIds    String[]         @db.ObjectId
+  blogs       Blog[]           @relation(fields: [blogIds], references: [id])
+  blogIds     String[]         @db.ObjectId
 
   @@map("sectors")
 }
@@ -168,4 +170,23 @@ model Conversation {
   updatedAt   DateTime   @updatedAt
 
   @@map("conversations")
+}
+
+model Blog {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  subtitle        String?
+  authorName      String
+  authorDesignation String
+  publishedDate   DateTime
+  docFile         String     // URL to the PDF file
+  coverImage      String     // URL to the cover image
+  content         String     // Markdown content
+  active          Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  sectors         Sector[]   @relation(fields: [sectorIds], references: [id])
+  sectorIds       String[]   @db.ObjectId
+
+  @@map("blogs")
 }

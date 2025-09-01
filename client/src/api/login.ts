@@ -1,7 +1,8 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { apiRequest } from './index';
 import type  { LoginResponse, LoginRequest } from '@/types/profile';
+import type { Profile } from '@/types/profile';
 
 // Login mutation
 export const useLogin = () => {
@@ -10,7 +11,7 @@ export const useLogin = () => {
       const response = await apiRequest<LoginResponse, LoginRequest>("POST", '/auth/login', credentials);
       
       if (response.access_token) {
-        Cookies.set('auth_token', response.access_token, { expires: 7 }); // Expires in 7 days
+        Cookies.set('auth_token_admin', response.access_token, { expires: 7 }); // Expires in 7 days
       }
       
       return response;
@@ -18,14 +19,21 @@ export const useLogin = () => {
   });
 };
 
+export const useGetProfile = () => {
+  return useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const response = await apiRequest<Profile, {}>("GET", "/admin/profile");
+      return response;
+    },
+    retry: false,
+  });
+};
+
 
 // Logout function
 export const logout = () => {
-  Cookies.remove('auth_token');
-  // You can add additional cleanup here if needed
+  Cookies.remove('auth_token_admin');
 };
 
-// Check if user is authenticated
-export const isAuthenticated = (): boolean => {
-  return !!Cookies.get('auth_token');
-};
+

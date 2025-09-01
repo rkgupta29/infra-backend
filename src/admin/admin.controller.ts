@@ -9,6 +9,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Headers,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,8 +24,9 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiConflictResponse,
+  ApiHeader,
 } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../auth/decorators/roles.decorator';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { DeleteConfirmationDto } from './dto/delete-confirmation.dto';
@@ -32,15 +35,19 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthService } from '../auth/auth.service';
 
 @ApiTags('Admin Management')
-@ApiBearerAuth('JWT-auth')
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(UserRole.SUPERADMIN)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -96,6 +103,8 @@ export class AdminController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(UserRole.SUPERADMIN)
   @ApiOperation({
     summary: 'Get all admins',
@@ -117,6 +126,8 @@ export class AdminController {
   }
 
   @Get('profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(UserRole.SUPERADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Get current user profile',
@@ -135,6 +146,8 @@ export class AdminController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(UserRole.SUPERADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Get admin by ID',
@@ -174,6 +187,8 @@ export class AdminController {
 
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(UserRole.SUPERADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -235,5 +250,68 @@ export class AdminController {
     @CurrentUser() currentUser: any,
   ) {
     return this.adminService.remove(id, deleteConfirmationDto, currentUser);
+  }
+  @Post('verify-token')
+  @ApiOperation({
+    summary: 'Verify token and get profile',
+    description: 'Verifies the provided token and returns the admin profile information if valid.',
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'JWT token with Bearer prefix',
+    required: true,
+    schema: {
+      type: 'string',
+      example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Token verified and profile returned successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'admin@example.com' },
+        token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing token',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 401 },
+        message: { type: 'string', example: 'Invalid token' },
+        error: { type: 'string', example: 'Unauthorized' },
+      },
+    },
+  })
+  async verifyToken(@Headers('authorization') authHeader: string) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Missing or invalid token format');
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+    try {
+      // Verify the token and extract the payload
+      const payload = await this.authService.verifyToken(token);
+      
+      if (!payload || !payload.sub) {
+        throw new UnauthorizedException('Invalid token');
+      }
+      
+      // Find the admin by ID
+      const admin = await this.adminService.findOneById(payload.sub);
+      
+      // Return only email and token
+      return {
+        email: admin.email,
+        token: token,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 }
