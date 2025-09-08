@@ -48,7 +48,7 @@ import { FileUploadModule } from './common/file-upload/file-upload.module';
       ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client/dist'),
       serveRoot: '/admin',
-      exclude: ['/api*', '/docs*', '/assets*'],
+      exclude: ['/api*', '/docs*'],
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'assets'),

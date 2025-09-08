@@ -69,6 +69,36 @@ model HomepageSection {
   @@map("homepage_sections")
 }
 
+model ContactSection {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  sectionKey  String   @unique  // e.g., "contactInfo", "contactForm", "map", etc.
+  data        Json     // Completely flexible JSON structure for each section
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("contact_sections")
+}
+
+model ContactFormSubmission {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  firstName       String
+  lastName        String
+  email           String
+  contactNumber   String
+  personType      String    // From "I am a" dropdown
+  interestedIn    String    // From "I am interested in" dropdown
+  message         String?
+  fileUrl         String?   // URL to uploaded file (image or PDF)
+  links           String?   // Any links pasted by the user
+  isRead          Boolean   @default(false)
+  isDeleted       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("contact_form_submissions")
+}
+
 model NewsletterSubscription {
     id          String   @id @default(auto()) @map("_id") @db.ObjectId
   email       String   @unique
@@ -189,4 +219,63 @@ model Blog {
   sectorIds       String[]   @db.ObjectId
 
   @@map("blogs")
+}
+
+model Newsletter {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  subtitle        String?
+  version         String     // e.g., "Vol. 1, Issue 2"
+  publishedDate   DateTime
+  coverImage      String     // URL to the cover image
+  fileUrl         String     // URL to the PDF file
+  active          Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@map("newsletters")
+}
+
+model ArchiveTab {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  name            String     // Display name of the tab
+  slug            String     @unique // URL-friendly identifier
+  description     String?    // Optional description of the tab content
+  order           Int        // Order in which tabs should be displayed
+  active          Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  galleryItems    GalleryItem[] // Relation to gallery items
+
+  @@map("archive_tabs")
+}
+
+model GalleryItem {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  image           String     // URL to the image file
+  event           String     // Name of the event
+  year            Int        // Year of the event
+  description     String     // Description of the image
+  tabId           String     @db.ObjectId // Reference to the archive tab
+  tab             ArchiveTab @relation(fields: [tabId], references: [id])
+  active          Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@map("gallery_items")
+}
+
+model MediaCoverage {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  title           String     // Title of the media coverage
+  subtitle        String?    // Optional subtitle
+  authorName      String     // Name of the author or publication
+  date            String     // Date of publication (as string for flexibility)
+  coverImage      String     // URL to the cover image
+  publicationYear Int        // Year of publication for filtering
+  active          Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@map("media_coverage")
 }

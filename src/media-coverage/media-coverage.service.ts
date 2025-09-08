@@ -1,227 +1,197 @@
-import { Injectable } from '@nestjs/common';
-import { PaginatedResult } from '../types/utils';
-
-interface MediaCoverageQuery {
-  page: number;
-  limit: number;
-  search?: string;
-  category?: string;
-
-}
-
-export interface MediaCoverageItem {
-  id: number;
-  img: string;
-  category: string;
-  title: string;
-  sectors: string;
-  date: string;
-  description: string;
-  link: string;
-}
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { FileUploadService } from '../common/file-upload/file-upload.service';
+import { CreateMediaCoverageDto } from './dto/create-media-coverage.dto';
+import { UpdateMediaCoverageDto } from './dto/update-media-coverage.dto';
+import { QueryMediaCoverageDto, SortOrder } from './dto/query-media-coverage.dto';
+import type { Multer } from 'multer';
 
 @Injectable()
 export class MediaCoverageService {
+  private readonly logger = new Logger(MediaCoverageService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly fileUploadService: FileUploadService,
+  ) { }
+
   /**
-   * Get company media coverage and news mentions with pagination and search
-   * @param query - Query parameters for pagination and filtering
-   * @returns Paginated media coverage data
+   * Create a new media coverage with image upload
+   * @param createMediaCoverageDto - Data for the new media coverage
+   * @param imageFile - The image file to upload
+   * @returns The created media coverage
    */
-  async getMediaCoverage(query: MediaCoverageQuery): Promise<PaginatedResult<MediaCoverageItem>> {
-    // Generate sample media coverage data
-    const allMediaCoverage: MediaCoverageItem[] = [
-      {
-        id: 50,
-        img: "/assets/archive/newsAndMedia/coal.jpg",
-        category: "News",
-        title: "Vinayak Chatterjee",
-        sectors: "",
-        date: "July 18,2025",
-        description: "Coal, Clean, Air and a Welcome Resolution",
-        link: "/assets/pdf/coalClean.pdf",
-      },
-      {
-        id: 51,
-        img: "/assets/archive/newsAndMedia/infrastructure.jpg",
-        category: "Research",
-        title: "Smart Cities Initiative",
-        sectors: "Urban Development",
-        date: "July 15,2025",
-        description: "New research on sustainable urban infrastructure development",
-        link: "/assets/pdf/smart-cities.pdf",
-      },
-      {
-        id: 52,
-        img: "/assets/archive/newsAndMedia/transport.jpg",
-        category: "Policy",
-        title: "Transportation Policy Reform",
-        sectors: "Transportation",
-        date: "July 12,2025",
-        description: "Policy recommendations for modernizing transportation infrastructure",
-        link: "/assets/pdf/transport-policy.pdf",
-      },
-      {
-        id: 53,
-        img: "/assets/archive/newsAndMedia/energy.jpg",
-        category: "News",
-        title: "Energy Infrastructure Summit",
-        sectors: "Energy",
-        date: "July 10,2025",
-        description: "Annual summit on energy infrastructure development",
-        link: "/assets/pdf/energy-summit.pdf",
-      },
-      {
-        id: 54,
-        img: "/assets/archive/newsAndMedia/water.jpg",
-        category: "Research",
-        title: "Water Management Systems",
-        sectors: "Water Resources",
-        date: "July 8,2025",
-        description: "Innovative approaches to water infrastructure management",
-        link: "/assets/pdf/water-management.pdf",
-      },
-      {
-        id: 55,
-        img: "/assets/archive/newsAndMedia/digital.jpg",
-        category: "Technology",
-        title: "Digital Infrastructure",
-        sectors: "Technology",
-        date: "July 5,2025",
-        description: "Digital transformation in infrastructure sector",
-        link: "/assets/pdf/digital-infrastructure.pdf",
-      },
-      {
-        id: 56,
-        img: "/assets/archive/newsAndMedia/green.jpg",
-        category: "Research",
-        title: "Green Building Standards",
-        sectors: "Construction",
-        date: "July 3,2025",
-        description: "New standards for sustainable construction practices",
-        link: "/assets/pdf/green-standards.pdf",
-      },
-      {
-        id: 57,
-        img: "/assets/archive/newsAndMedia/railway.jpg",
-        category: "Policy",
-        title: "Railway Modernization",
-        sectors: "Railways",
-        date: "July 1,2025",
-        description: "Comprehensive plan for railway infrastructure upgrade",
-        link: "/assets/pdf/railway-modernization.pdf",
-      },
-      {
-        id: 58,
-        img: "/assets/archive/newsAndMedia/aviation.jpg",
-        category: "News",
-        title: "Aviation Infrastructure",
-        sectors: "Aviation",
-        date: "June 28,2025",
-        description: "Expansion plans for major airports across India",
-        link: "/assets/pdf/aviation-expansion.pdf",
-      },
-      {
-        id: 59,
-        img: "/assets/archive/newsAndMedia/ports.jpg",
-        category: "Research",
-        title: "Port Development",
-        sectors: "Maritime",
-        date: "June 25,2025",
-        description: "Strategic development of port infrastructure",
-        link: "/assets/pdf/port-development.pdf",
-      },
-      {
-        id: 60,
-        img: "/assets/archive/newsAndMedia/telecom.jpg",
-        category: "Technology",
-        title: "5G Infrastructure",
-        sectors: "Telecommunications",
-        date: "June 22,2025",
-        description: "Rollout of 5G infrastructure across major cities",
-        link: "/assets/pdf/5g-rollout.pdf",
-      },
-      {
-        id: 61,
-        img: "/assets/archive/newsAndMedia/healthcare.jpg",
-        category: "Policy",
-        title: "Healthcare Infrastructure",
-        sectors: "Healthcare",
-        date: "June 20,2025",
-        description: "National healthcare infrastructure development plan",
-        link: "/assets/pdf/healthcare-plan.pdf",
-      },
-      {
-        id: 62,
-        img: "/assets/archive/newsAndMedia/education.jpg",
-        category: "Research",
-        title: "Educational Facilities",
-        sectors: "Education",
-        date: "June 18,2025",
-        description: "Modernization of educational infrastructure",
-        link: "/assets/pdf/education-modernization.pdf",
-      },
-      {
-        id: 63,
-        img: "/assets/archive/newsAndMedia/agriculture.jpg",
-        category: "News",
-        title: "Agricultural Infrastructure",
-        sectors: "Agriculture",
-        date: "June 15,2025",
-        description: "Investment in agricultural infrastructure development",
-        link: "/assets/pdf/agricultural-investment.pdf",
-      },
-      {
-        id: 64,
-        img: "/assets/archive/newsAndMedia/renewable.jpg",
-        category: "Research",
-        title: "Renewable Energy",
-        sectors: "Energy",
-        date: "June 12,2025",
-        description: "Renewable energy infrastructure expansion",
-        link: "/assets/pdf/renewable-expansion.pdf",
+  async create(
+    createMediaCoverageDto: CreateMediaCoverageDto,
+    imageFile: Multer.File,
+  ) {
+    try {
+      // Validate image file
+      if (!imageFile) {
+        throw new BadRequestException('Cover image file is required');
       }
-    ];
 
-    // Apply search filter
-    let filteredData = allMediaCoverage;
-    if (query.search) {
-      const searchTerm = query.search.toLowerCase();
-      filteredData = filteredData.filter(item => 
-        item.title.toLowerCase().includes(searchTerm) ||
-        item.description.toLowerCase().includes(searchTerm) ||
-        item.category.toLowerCase().includes(searchTerm) ||
-        item.sectors.toLowerCase().includes(searchTerm)
+      // Generate unique filename with timestamp
+      const timestamp = Date.now();
+      const sanitizedTitle = createMediaCoverageDto.title
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .substring(0, 30);
+
+      // Upload image file
+      const imageUrl = await this.fileUploadService.uploadImage(
+        imageFile,
+        `media-coverage-${sanitizedTitle}-${createMediaCoverageDto.publicationYear}-${timestamp}`
       );
+
+      // Create media coverage with image URL
+      return this.prisma.mediaCoverage.create({
+        data: {
+          ...createMediaCoverageDto,
+          coverImage: imageUrl,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to create media coverage: ${error.message}`);
+      throw error;
     }
+  }
 
-    // Apply category filter
-    if (query.category) {
-      filteredData = filteredData.filter(item => 
-        item.category.toLowerCase() === query.category!.toLowerCase()
-      );
-    }
+  /**
+   * Get all media coverage with pagination and filtering
+   * @param queryMediaCoverageDto - Query parameters for filtering and pagination
+   * @returns Paginated list of media coverage
+   */
+  async findAll(queryMediaCoverageDto: QueryMediaCoverageDto) {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'publicationYear',
+      sortOrder = SortOrder.DESC,
+      search,
+      year,
+    } = queryMediaCoverageDto;
 
-    // Calculate pagination
-    const totalItems = filteredData.length;
-    const totalPages = Math.ceil(totalItems / query.limit);
-    const currentPage = Math.min(query.page, totalPages);
-    const startIndex = (currentPage - 1) * query.limit;
-    const endIndex = startIndex + query.limit;
-    
-    // Get paginated data
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+    const skip = (page - 1) * limit;
 
-    // Return using the existing PaginatedResult interface
-    return {
-      data: paginatedData,
-      meta: {
-        total: totalItems,
-        page: currentPage,
-        limit: query.limit,
-        totalPages: totalPages || 1,
-        hasNext: currentPage < totalPages,
-        hasPrev: currentPage > 1
-      }
+    // Build the filter object
+    const where: any = {
+      active: true,
     };
+
+    // Add search filter if provided (case-insensitive partial match)
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { subtitle: { contains: search, mode: 'insensitive' } },
+        { authorName: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Add year filter if provided
+    if (year) {
+      where.publicationYear = year;
+    }
+
+    // Get total count for pagination
+    const total = await this.prisma.mediaCoverage.count({ where });
+
+    // Get the media coverage items
+    const mediaCoverageItems = await this.prisma.mediaCoverage.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+    });
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(total / limit);
+    const hasNext = page < totalPages;
+    const hasPrevious = page > 1;
+
+    return {
+      data: mediaCoverageItems,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext,
+        hasPrevious,
+      },
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get a specific media coverage by ID
+   * @param id - The ID of the media coverage to retrieve
+   * @returns The media coverage data
+   */
+  async findOne(id: string) {
+    const mediaCoverage = await this.prisma.mediaCoverage.findUnique({
+      where: { id },
+    });
+
+    if (!mediaCoverage) {
+      throw new NotFoundException(`Media coverage with ID ${id} not found`);
+    }
+
+    return mediaCoverage;
+  }
+
+  /**
+   * Delete a media coverage
+   * @param id - The ID of the media coverage to delete
+   * @returns The deleted media coverage
+   */
+  async remove(id: string) {
+    // Verify media coverage exists
+    const mediaCoverage = await this.findOne(id);
+
+    try {
+      // Delete the image file
+      if (mediaCoverage.coverImage) {
+        await this.fileUploadService.deleteFile(mediaCoverage.coverImage);
+      }
+
+      // Delete the media coverage record
+      return this.prisma.mediaCoverage.delete({
+        where: { id },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to delete media coverage: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Get media coverage by publication year
+   * @param year - The year to filter by
+   * @param queryMediaCoverageDto - Query parameters for pagination
+   * @returns Paginated list of media coverage for the specified year
+   */
+  async findByYear(year: number, queryMediaCoverageDto: QueryMediaCoverageDto) {
+    return this.findAll({
+      ...queryMediaCoverageDto,
+      year,
+    });
+  }
+
+  /**
+   * Get years with media coverage
+   * @returns Array of years in which media coverage exists
+   */
+  async getYears(): Promise<number[]> {
+    const result = await this.prisma.mediaCoverage.groupBy({
+      by: ['publicationYear'],
+      where: { active: true },
+      orderBy: { publicationYear: 'desc' },
+    });
+
+    return result.map(item => item.publicationYear);
   }
 }

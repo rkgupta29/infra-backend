@@ -1,0 +1,88 @@
+[
+    {
+        "sectionKey": "contactInfo",
+        "data": {
+            "title": "Contact Us",
+            "subtitle": "Get in touch with us",
+            "description": "We would love to hear from you. Reach out to us for any inquiries, collaborations, or feedback.",
+            "address": "123 Infrastructure Avenue, New Delhi, India - 110001",
+            "email": "contact@infra-org.org",
+            "phone": "+91 11 2345 6789"
+        },
+        "active": true
+    },
+    {
+        "sectionKey": "contactForm",
+        "data": {
+            "title": "Send us a message",
+            "description": "Fill out the form below and we will get back to you as soon as possible.",
+            "fields": [
+                {
+                    "name": "name",
+                    "label": "Your Name",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "name": "email",
+                    "label": "Email Address",
+                    "type": "email",
+                    "required": true
+                },
+                {
+                    "name": "phone",
+                    "label": "Phone Number",
+                    "type": "tel",
+                    "required": false
+                },
+                {
+                    "name": "subject",
+                    "label": "Subject",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "name": "message",
+                    "label": "Your Message",
+                    "type": "textarea",
+                    "required": true
+                }
+            ],
+            "submitButtonText": "Send Message"
+        },
+        "active": true
+    },
+    {
+        "sectionKey": "map",
+        "data": {
+            "title": "Our Location",
+            "description": "Find us at our office in New Delhi",
+            "embedMapUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224096.79044071963!2d77.06889969999999!3d28.527669!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x52c2b7494e204dce!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1652345678901!5m2!1sen!2sin",
+            "height": 450,
+            "width": "100%"
+        },
+        "active": true
+    },
+    {
+        "sectionKey": "officeHours",
+        "data": {
+            "title": "Office Hours",
+            "description": "Our team is available during the following hours:",
+            "hours": [
+                {
+                    "day": "Monday - Friday",
+                    "time": "9:00 AM - 6:00 PM"
+                },
+                {
+                    "day": "Saturday",
+                    "time": "10:00 AM - 2:00 PM"
+                },
+                {
+                    "day": "Sunday",
+                    "time": "Closed"
+                }
+            ]
+        },
+        "active": true
+    }
+]

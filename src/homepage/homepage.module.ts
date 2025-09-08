@@ -5,11 +5,32 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { LatestUpdatesController } from './latest-updates.controller';
 import { LatestUpdatesService } from './latest-updates.service';
 import { AdvocacyController } from './advocacy.controller';
+import { ContactController } from './contact.controller';
+import { ContactService } from './contact.service';
+import { LeadsController } from './leads.controller';
+import { LeadsService } from './leads.service';
+import { FileUploadModule } from '../common/file-upload/file-upload.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [HomepageController, LatestUpdatesController, AdvocacyController],
-  providers: [HomepageService, LatestUpdatesService],
-  exports: [HomepageService, LatestUpdatesService],
+  imports: [PrismaModule, FileUploadModule],
+  controllers: [
+    HomepageController,
+    LatestUpdatesController,
+    AdvocacyController,
+    ContactController,
+    LeadsController
+  ],
+  providers: [
+    HomepageService,
+    LatestUpdatesService,
+    ContactService,
+    LeadsService
+  ],
+  exports: [
+    HomepageService,
+    LatestUpdatesService,
+    ContactService,
+    LeadsService
+  ],
 })
-export class HomepageModule {}
+export class HomepageModule { }
