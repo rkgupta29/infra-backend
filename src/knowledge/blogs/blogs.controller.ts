@@ -36,7 +36,7 @@ import { Roles, UserRole } from '../../auth/decorators/roles.decorator';
 @ApiTags('Knowledge')
 @Controller('knowledge/blogs')
 export class BlogsController {
-  constructor(private readonly service: BlogsService) {}
+  constructor(private readonly service: BlogsService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -132,14 +132,37 @@ export class BlogsController {
       // Parse active as boolean
       active: body.active === 'true' || body.active === true,
       // Parse sectorIds as array
-      sectorIds: Array.isArray(body.sectorIds) 
-        ? body.sectorIds 
-        : body.sectorIds?.includes(',') 
-          ? body.sectorIds.split(',') 
+      sectorIds: Array.isArray(body.sectorIds)
+        ? body.sectorIds
+        : body.sectorIds?.includes(',')
+          ? body.sectorIds.split(',')
           : [body.sectorIds]
     };
-    
+
     return this.service.create(createBlogDto, files);
+  }
+
+  @Get('years')
+  @ApiOperation({
+    summary: 'Get years with blog publications',
+    description: 'Retrieves an array of years in which blogs were published, sorted in descending order. This endpoint is public.',
+  })
+  @ApiQuery({
+    name: 'activeOnly',
+    required: false,
+    type: Boolean,
+    description: 'If true, returns only years with active blogs',
+    default: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Years retrieved successfully.',
+    schema: {
+      example: [2023, 2022, 2021, 2020],
+    },
+  })
+  getBlogYears(@Query('activeOnly') activeOnly?: boolean) {
+    return this.service.getBlogYears(activeOnly !== false);
   }
 
   @Get()
@@ -183,12 +206,12 @@ export class BlogsController {
     @Query() paginationDto?: PaginationDto,
   ) {
     const { page = 1, limit = 10 } = paginationDto || {};
-    
+
     // If sectorId is provided, use getBlogsBySector instead of findAll
     if (sectorId) {
       return this.service.getBlogsBySector(sectorId, activeOnly === true, page, limit);
     }
-    
+
     return this.service.findAll(activeOnly === true, page, limit);
   }
 

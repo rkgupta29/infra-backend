@@ -20,7 +20,7 @@ export class BlogsService {
     private readonly prisma: PrismaService,
     private readonly fileUploadService: FileUploadService,
     private readonly sectorsService: SectorsService,
-  ) {}
+  ) { }
 
   /**
    * Create a new blog
@@ -40,11 +40,11 @@ export class BlogsService {
       const sectorIds = Array.isArray(createBlogDto.sectorIds)
         ? createBlogDto.sectorIds
         : [createBlogDto.sectorIds].filter(Boolean);
-      
+
       if (!sectorIds.length) {
         throw new BadRequestException('At least one sector ID is required');
       }
-      
+
       // Validate that all sectors exist
       await this.sectorsService.validateSectorIds(sectorIds);
 
@@ -52,14 +52,14 @@ export class BlogsService {
       if (!files.coverImageFile || files.coverImageFile.length === 0) {
         throw new BadRequestException('Cover image file is required');
       }
-      
+
       if (!files.docFile || files.docFile.length === 0) {
         throw new BadRequestException('Document file is required');
       }
-      
+
       const coverImageFile = files.coverImageFile[0];
       const docFile = files.docFile[0];
-      
+
       // Generate unique filenames with timestamp and hash
       const timestamp = Date.now();
       const imageHash = Math.random().toString(36).substring(2, 10);
@@ -69,15 +69,15 @@ export class BlogsService {
         .replace(/\s+/g, '-')
         .replace(/[^a-z0-9-]/g, '')
         .substring(0, 30); // Shorter title to accommodate hash
-      
+
       // Upload files with unique filenames
       const coverImageUrl = await this.fileUploadService.uploadImage(
-        coverImageFile, 
+        coverImageFile,
         `blog-img-${sanitizedTitle}-${timestamp}-${imageHash}`
       );
-      
+
       const docFileUrl = await this.fileUploadService.uploadPdf(
-        docFile, 
+        docFile,
         `blog-doc-${sanitizedTitle}-${timestamp}-${docHash}`
       );
 
@@ -102,7 +102,7 @@ export class BlogsService {
           sectors: true, // Include related sectors
         },
       });
-      
+
       this.logger.log(`Created new blog: ${createBlogDto.title}`);
       return blog;
     } catch (error) {
@@ -120,7 +120,7 @@ export class BlogsService {
    */
   async findAll(activeOnly = false, page = 1, limit = 10) {
     const where: any = {};
-    
+
     // Filter by active status if requested
     if (activeOnly) {
       where.active = true;
@@ -196,7 +196,7 @@ export class BlogsService {
     if (updateBlogDto.publishedDate) {
       data.publishedDate = new Date(updateBlogDto.publishedDate);
     }
-    
+
     // Validate sectors if provided
     if (updateBlogDto.sectorIds && updateBlogDto.sectorIds.length > 0) {
       await this.sectorsService.validateSectorIds(updateBlogDto.sectorIds);
@@ -227,7 +227,7 @@ export class BlogsService {
     // Verify blog exists and get current data
     const blog = await this.findOne(id);
     const updateData: any = {};
-    
+
     try {
       // Update cover image if provided
       if (files.coverImageFile && files.coverImageFile.length > 0) {
@@ -239,20 +239,20 @@ export class BlogsService {
           .replace(/\s+/g, '-')
           .replace(/[^a-z0-9-]/g, '')
           .substring(0, 30);
-        
+
         const coverImageUrl = await this.fileUploadService.uploadImage(
-          coverImageFile, 
+          coverImageFile,
           `blog-img-${sanitizedTitle}-${timestamp}-${imageHash}`
         );
-        
+
         // Delete old image if exists
         if (blog.coverImage) {
           await this.fileUploadService.deleteFile(blog.coverImage);
         }
-        
+
         updateData.coverImage = coverImageUrl;
       }
-      
+
       // Update doc file if provided
       if (files.docFile && files.docFile.length > 0) {
         const docFile = files.docFile[0];
@@ -263,20 +263,20 @@ export class BlogsService {
           .replace(/\s+/g, '-')
           .replace(/[^a-z0-9-]/g, '')
           .substring(0, 30);
-        
+
         const docFileUrl = await this.fileUploadService.uploadPdf(
-          docFile, 
+          docFile,
           `blog-doc-${sanitizedTitle}-${timestamp}-${docHash}`
         );
-        
+
         // Delete old doc if exists
         if (blog.docFile) {
           await this.fileUploadService.deleteFile(blog.docFile);
         }
-        
+
         updateData.docFile = docFileUrl;
       }
-      
+
       // Update blog with new file URLs if any files were uploaded
       if (Object.keys(updateData).length > 0) {
         return (this.prisma as ExtendedPrismaService).blog.update({
@@ -287,7 +287,7 @@ export class BlogsService {
           },
         });
       }
-      
+
       // If no files were uploaded, return the existing blog
       return blog;
     } catch (error) {
@@ -322,17 +322,17 @@ export class BlogsService {
    */
   async remove(id: string) {
     const blog = await this.findOne(id); // Verify it exists
-    
+
     try {
       // Delete associated files
       if (blog.coverImage) {
         await this.fileUploadService.deleteFile(blog.coverImage);
       }
-      
+
       if (blog.docFile) {
         await this.fileUploadService.deleteFile(blog.docFile);
       }
-      
+
       // Delete the blog record
       return (this.prisma as ExtendedPrismaService).blog.delete({
         where: { id },
@@ -360,7 +360,7 @@ export class BlogsService {
         has: sectorId,
       },
     };
-    
+
     // Filter by active status if requested
     if (activeOnly) {
       where.active = true;
@@ -395,5 +395,35 @@ export class BlogsService {
       },
       lastUpdated: new Date().toISOString()
     };
+  }
+
+  /**
+   * Get years with blog publications
+   * @param activeOnly - If true, returns only years with active blogs
+   * @returns Array of years in which blogs were published, sorted in descending order
+   */
+  async getBlogYears(activeOnly = true): Promise<number[]> {
+    try {
+      const where = activeOnly ? { active: true } : {};
+
+      // Extract years from publishedDate
+      const result = await (this.prisma as ExtendedPrismaService).blog.findMany({
+        where,
+        select: {
+          publishedDate: true,
+        },
+      });
+
+      // Extract years from dates and remove duplicates
+      const years = result
+        .map(blog => new Date(blog.publishedDate).getFullYear())
+        .filter((year, index, self) => self.indexOf(year) === index)
+        .sort((a, b) => b - a); // Sort in descending order
+
+      return years;
+    } catch (error) {
+      this.logger.error(`Failed to fetch blog years: ${error.message}`);
+      throw error;
+    }
   }
 }
