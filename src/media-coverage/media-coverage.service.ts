@@ -194,4 +194,28 @@ export class MediaCoverageService {
 
     return result.map(item => item.publicationYear);
   }
+
+  /**
+   * Get the most recent media coverage items (last 3)
+   * @returns Array of the 3 most recent media coverage items
+   */
+  async getRecentMediaCoverage() {
+    try {
+      // Get the 3 most recent media coverage items
+      const recentItems = await this.prisma.mediaCoverage.findMany({
+        where: { active: true },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+      });
+
+      return {
+        data: recentItems,
+        count: recentItems.length,
+        lastUpdated: new Date().toISOString(),
+      };
+    } catch (error) {
+      this.logger.error(`Failed to fetch recent media coverage: ${error.message}`);
+      throw error;
+    }
+  }
 }

@@ -147,6 +147,67 @@ export class MediaCoverageController {
   }
 
   /**
+   * Get the most recent media coverage items (last 3)
+   * This endpoint is public and does not require authentication
+   */
+  @Get('recent')
+  @ApiOperation({
+    summary: 'Get recent media coverage',
+    description: 'Retrieves the 3 most recent media coverage items. This endpoint is public and does not require authentication.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Recent media coverage retrieved successfully',
+    schema: {
+      example: {
+        data: [
+          {
+            id: '60d21b4667d0d8992e610c85',
+            title: 'Infrastructure Development in Rural Areas',
+            subtitle: 'A comprehensive analysis of recent initiatives',
+            authorName: 'The Economic Times',
+            date: 'July 15, 2023',
+            coverImage: '/assets/images/media-coverage/infrastructure-development.jpg',
+            publicationYear: 2023,
+            active: true,
+            createdAt: '2023-06-10T12:00:00.000Z',
+            updatedAt: '2023-06-10T12:00:00.000Z',
+          },
+          {
+            id: '60d21b4667d0d8992e610c86',
+            title: 'Urban Planning Innovations',
+            subtitle: 'New approaches to sustainable city development',
+            authorName: 'The Hindu',
+            date: 'June 20, 2023',
+            coverImage: '/assets/images/media-coverage/urban-planning.jpg',
+            publicationYear: 2023,
+            active: true,
+            createdAt: '2023-06-05T12:00:00.000Z',
+            updatedAt: '2023-06-05T12:00:00.000Z',
+          },
+          {
+            id: '60d21b4667d0d8992e610c87',
+            title: 'Transportation Infrastructure Challenges',
+            subtitle: 'Addressing the growing needs of metropolitan areas',
+            authorName: 'India Today',
+            date: 'May 10, 2023',
+            coverImage: '/assets/images/media-coverage/transportation.jpg',
+            publicationYear: 2023,
+            active: true,
+            createdAt: '2023-05-01T12:00:00.000Z',
+            updatedAt: '2023-05-01T12:00:00.000Z',
+          }
+        ],
+        count: 3,
+        lastUpdated: '2023-06-10T12:00:00.000Z',
+      },
+    },
+  })
+  async getRecentMediaCoverage() {
+    return this.service.getRecentMediaCoverage();
+  }
+
+  /**
    * Get media coverage by publication year
    * This endpoint is public and does not require authentication
    */
