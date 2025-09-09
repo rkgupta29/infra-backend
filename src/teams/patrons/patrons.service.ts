@@ -1,31 +1,72 @@
-import { Injectable } from '@nestjs/common';
-
-export interface Patron {
-  id: number;
-  name: string;
-  title: string;
-  organization?: string;
-  bio: string;
-  imageUrl: string;
-  order: number;
-}
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreatePatronDto, UpdatePatronDto, PatronQueryDto } from './dto';
 
 @Injectable()
 export class PatronsService {
+  constructor(private prisma: PrismaService) { }
   /**
-   * Get all patrons
-   * @returns Static patrons data
+   * Get all patrons with pagination and filtering
+   * @param query Query parameters for filtering and pagination
+   * @returns Patrons data with pagination info
    */
-  async getPatrons() {
-    const patrons: any[] = [
-      {
-        image: "/assets/home/advisory/AshishDhawan.jpg",
-        title: "Ashish Dhawan",
-        desig: "Founder-CEO, The Convergence Foundation",
-        popupImg: "/assets/home/trustees/vinayakImg.png",
-        link: "https://www.linkedin.com/in/ashish-dhawan-241112",
-        socialMedia: "linkedin",
-        popupdesc: `Ashish Dhawan is the Founder-CEO of The Convergence Foundation (TCF), which focuses on accelerating India's economic growth and development. TCF incubates non-profits focused on creating system-wide impact in the areas of economic growth, equality of opportunity, and sustainability. Its current portfolio includes organisations working on jobs and investment, the rule of law, governance and state capacity, economic empowerment of women, science and technology, air pollution, unlocking philanthropic capital, and improving the effectiveness of non-profits.\n
+  async getPatrons(query?: PatronQueryDto) {
+    const { page = 1, limit = 10, active, search } = query || {};
+
+    const skip = (page - 1) * limit;
+
+    // Build filter conditions
+    const where: any = {};
+
+    if (active !== undefined) {
+      where.active = active;
+    }
+
+    if (search) {
+      where.title = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
+
+    // Get patrons with pagination
+    const [patrons, totalCount] = await Promise.all([
+      this.prisma.patron.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { order: 'asc' },
+      }),
+      this.prisma.patron.count({ where }),
+    ]);
+
+    // Return the patrons with pagination info
+    return {
+      patrons,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+      lastUpdated: new Date().toISOString()
+    };
+  }
+
+  // Helper method to seed initial patrons if needed
+  private async seedInitialPatrons() {
+    const count = await this.prisma.patron.count();
+    if (count === 0) {
+      // Seed initial patrons if needed
+      const initialPatrons = [
+        {
+          image: "/assets/home/advisory/AshishDhawan.jpg",
+          title: "Ashish Dhawan",
+          desig: "Founder-CEO, The Convergence Foundation",
+          popupImg: "/assets/home/trustees/vinayakImg.png",
+          link: "https://www.linkedin.com/in/ashish-dhawan-241112",
+          socialMedia: "linkedin",
+          popupdesc: `Ashish Dhawan is the Founder-CEO of The Convergence Foundation (TCF), which focuses on accelerating India's economic growth and development. TCF incubates non-profits focused on creating system-wide impact in the areas of economic growth, equality of opportunity, and sustainability. Its current portfolio includes organisations working on jobs and investment, the rule of law, governance and state capacity, economic empowerment of women, science and technology, air pollution, unlocking philanthropic capital, and improving the effectiveness of non-profits.\n
     
     He is also the Founding Chairperson of Ashoka University and Central Square Foundation. Ashoka University, established as a university in 2014, is recognised as a leading teaching and research institute across the humanities, social sciences, natural sciences, and data & computer science. Central Square Foundation has been a leading voice for foundational literacy and numeracy in India and currently supports several state governments in improving learning outcomes in the early grades.\n
     
@@ -34,14 +75,14 @@ export class PatronsService {
     He graduated from Yale University and received his MBA from Harvard Business School.
     
         `,
-      },
-      {
-        image: "/assets/home/advisory/NarotamSekhsaria.jpg",
-        title: "Narotam Sekhsaria",
-        desig: "Chairman Emeritus, Ambuja Cements Ltd; Chairman, Narotam Sekhsaria Foundation; Chairman, Ambuja Foundation",
-        popupImg: "/assets/home/trustees/vinayakImg.png",
-    
-        popupdesc: `
+        },
+        {
+          image: "/assets/home/advisory/NarotamSekhsaria.jpg",
+          title: "Narotam Sekhsaria",
+          desig: "Chairman Emeritus, Ambuja Cements Ltd; Chairman, Narotam Sekhsaria Foundation; Chairman, Ambuja Foundation",
+          popupImg: "/assets/home/trustees/vinayakImg.png",
+
+          popupdesc: `
         Narotam Sekhsaria, Chairman of Ambuja Cements Ltd and Chairman of ACC Ltd, is a prominent figure in the Indian cement industry. He introduced new standards in manufacturing, management, marketing efficiency, and corporate social responsibility to an industry he helped transform.\n
     
     A first-generation industrialist, Mr Sekhsaria completed his Bachelor's in Chemical Engineering with honours and distinction from the University of Bombay. He was the principal founder-promoter of Ambuja Cement, and its Chief Executive and Managing Director from its inception in April 1983 until January 2006. He is currently the non-executive Chairman of the company.\n
@@ -53,14 +94,14 @@ export class PatronsService {
     He currently holds Board positions as Chairman of Narotam Sekhsaria Foundation and Ambuja Cement Foundation. He is a Board Member in the Governing Council of the Indian Institute of Crafts & Design, Jaipur, and is Director of the Ambuja Educational Institute. Previously, he served as a Trustee on the Board of UTI (1993-2001), as the Vice Chairman of GRUH Finance Ltd (a co-investment of Ambuja Cement with HDFC), and was also on the Board of Governors of the Indian Institute of Technology (IIT) Kharagpur.
      
          `,
-      },
-    {
-      image: "/assets/home/advisory/HemendraMKothari.jpg",
-      title: "Hemendra M. Kothari",
-      desig: "Chairman, DSP Investment Managers Pvt Ltd",
-      popupImg: "/assets/home/trustees/vinayakImg.png",
-  
-      popupdesc: `
+        },
+        {
+          image: "/assets/home/advisory/HemendraMKothari.jpg",
+          title: "Hemendra M. Kothari",
+          desig: "Chairman, DSP Investment Managers Pvt Ltd",
+          popupImg: "/assets/home/trustees/vinayakImg.png",
+
+          popupdesc: `
       Hemendra Kothari represents the fourth generation of a family of prominent stockbrokers and is the ex-President of the Bombay Stock Exchange. He has over 50 years of experience in the financial services industry.\n
   
   He is currently the Chairman of DSP Investment Managers Pvt Ltd, one of the leading asset management companies in India, which was in a decade-long joint venture with BlackRock. He also served as Chairman of DSP Merrill Lynch, a joint venture with Merrill Lynch, until his retirement in 2009.\n
@@ -71,15 +112,15 @@ export class PatronsService {
   
   Mr Kothari is the Founder, Chairman and Managing Trustee of the Wildlife Conservation Trust (WCT), a non-religious and non-political, not-for-profit trust that endeavours to strengthen the protection of forest ecosystems and mitigate climate change. He is also one of the largest individual donors in wildlife and environmental conservation in India. He is a Member of the State Board for Wildlife of Rajasthan, under the Chairmanship of the Chief Minister. He also served as a Member of the State Board of Maharashtra. He serves as the India Chairman of The Nature Conservancy (TNC), the largest environmental organisation in the world. He has served as a Member of The Energy and Resources Institute (TERI) Governing Council. He founded the Hemendra Kothari Foundation (HKF), a philanthropic organisation which assists other NGOs, particularly in the areas of education, healthcare, art, culture, heritage, and sports.
   `,
-    },
-    {
-      image: "/assets/home/advisory/JanmejayaKSinha.jpg",
-      title: "Dr Janmejaya K. Sinha",
-      desig: "Chairman India, Boston Consulting Group",
-      popupImg: "/assets/home/trustees/vinayakImg.png",
-      link: "https://www.linkedin.com/in/janmejaya-sinha-591259120",
-      socialMedia: "linkedin",
-      popupdesc: `Dr Janmejaya Sinha is Chairman of BCG's India Practice and also a BCG Fellow researching Family Businesses. He is a member of The Boston Consulting Group’s Henderson Institute Innovation Sounding Board, dedicated to supporting, inspiring, and guiding upstream innovation at BCG. He previously served as Chairman of the Asia-Pacific region between 2009 and 2018 and as a member of the firm's Executive Committee between 2006 and 2018.\n
+        },
+        {
+          image: "/assets/home/advisory/JanmejayaKSinha.jpg",
+          title: "Dr Janmejaya K. Sinha",
+          desig: "Chairman India, Boston Consulting Group",
+          popupImg: "/assets/home/trustees/vinayakImg.png",
+          link: "https://www.linkedin.com/in/janmejaya-sinha-591259120",
+          socialMedia: "linkedin",
+          popupdesc: `Dr Janmejaya Sinha is Chairman of BCG's India Practice and also a BCG Fellow researching Family Businesses. He is a member of The Boston Consulting Group’s Henderson Institute Innovation Sounding Board, dedicated to supporting, inspiring, and guiding upstream innovation at BCG. He previously served as Chairman of the Asia-Pacific region between 2009 and 2018 and as a member of the firm's Executive Committee between 2006 and 2018.\n
   
   He possesses deep expertise in managing conflict in family-owned businesses. He has worked extensively with clients worldwide on a range of issues encompassing large-scale organisation transformation, strategy, governance, family business matters, and operations turnaround.\n
   
@@ -95,13 +136,13 @@ export class PatronsService {
   Dr Sinha holds a PhD from the Woodrow Wilson School of Public and International Affairs, Princeton University, the US; a BA and an MA in Economics from Clare College, Cambridge University, the UK; and a BA and an MA in History from St Stephen’s College, Delhi University, India.
   
   `,
-    },
-    {
-      image: "/assets/home/advisory/SNSubrahmanyan.jpg",
-      title: "S. N. Subrahmanyan",
-      desig: "S N Subrahmanyan, Chairman & Managing Director, Larsen & Toubro",
-      popupImg: "/assets/home/trustees/vinayakImg.png",
-      popupdesc: `
+        },
+        {
+          image: "/assets/home/advisory/SNSubrahmanyan.jpg",
+          title: "S. N. Subrahmanyan",
+          desig: "S N Subrahmanyan, Chairman & Managing Director, Larsen & Toubro",
+          popupImg: "/assets/home/trustees/vinayakImg.png",
+          popupdesc: `
        
   S N Subrahmanyan (SNS) is the Chairman & Managing Director of Larsen & Toubro, a multi-billion-dollar conglomerate. He also holds diverse leadership positions as Chairperson of L&T Finance Holdings Ltd and Chairman of LTIMindtree, L&T Technology Services, and L&T Metro Rail (Hyderabad) Ltd.\n
   
@@ -114,15 +155,15 @@ export class PatronsService {
   SNS serves as one of the nine founding members of the Climate Finance Leadership Initiative (CFLI) India, actively contributing to bringing global scale and influence to this initiative. Additionally, he serves as the honorary chairperson of the Board of Governors at the National Institute of Technology-Rourkela. In February 2021, he was appointed by the Union Ministry of Labour & Employment as the Chairman of the National Safety Council for two years.
   
        `,
-    },
-    {
-      image: "/assets/home/advisory/SameerGupta.jpg",
-      title: "Sameer Gupta",
-      desig: "Chairman & Managing Director, Jakson Group",
-      popupImg: "/assets/home/trustees/vinayakImg.png",
-      link: "https://www.linkedin.com/in/sameer-gupta-jakson",
-      socialMedia: "linkedin",
-      popupdesc: `
+        },
+        {
+          image: "/assets/home/advisory/SameerGupta.jpg",
+          title: "Sameer Gupta",
+          desig: "Chairman & Managing Director, Jakson Group",
+          popupImg: "/assets/home/trustees/vinayakImg.png",
+          link: "https://www.linkedin.com/in/sameer-gupta-jakson",
+          socialMedia: "linkedin",
+          popupdesc: `
   Sameer Gupta is Chairman and Managing Director of Jakson Group — India’s leading energy and infrastructure company specialising in distributed energy, solar, and EPC solutions. The business interests of Jakson span multiple lines, including generating set manufacturing, solar module manufacturing, solar off-grid products, hybrid solutions, battery-based energy storage systems, solar rooftops, solar land-based EPC, electrical EPC in areas of substation, transmission & distribution, and defence solutions. Jakson also has business interests in civil infrastructure in India, real estate in the UK, and hospitality.\n
   
   Mr Gupta is currently Chairman of the Skill Council of Green Jobs, a Government of India initiative. He has served as Chairman of the Confederation of Indian Industry (CII) Northern Region and continues to be actively involved in various Councils & Committees of CII.\n
@@ -130,15 +171,15 @@ export class PatronsService {
   He is a graduate in Electronics Engineering from Pune University and an alumnus of Harvard Business School.
   
       `,
-    },
-    {
-      image: "/assets/home/advisory/GeetanjaliKirloskar.jpg",
-      title: "Geetanjali Vikram Kirloskar",
-      desig: "Chairperson and MD, Kirloskar Systems Pvt Ltd; Chairperson, Toyota Tsusho Insurance Broker Pvt Ltd",
-      link: "https://www.linkedin.com/in/geetanjali-kirloskar-b04203154/",
-      socialMedia: "linkedin",
-      popupImg: "/assets/home/trustees/vinayakImg.png",
-      popupdesc: `
+        },
+        {
+          image: "/assets/home/advisory/GeetanjaliKirloskar.jpg",
+          title: "Geetanjali Vikram Kirloskar",
+          desig: "Chairperson and MD, Kirloskar Systems Pvt Ltd; Chairperson, Toyota Tsusho Insurance Broker Pvt Ltd",
+          link: "https://www.linkedin.com/in/geetanjali-kirloskar-b04203154/",
+          socialMedia: "linkedin",
+          popupImg: "/assets/home/trustees/vinayakImg.png",
+          popupdesc: `
        Geetanjali Vikram Kirloskar is Chairperson and MD of Kirloskar Systems and Chairperson of Toyota Tsusho Insurance Broker Pvt Ltd. She is recognised as a thought leader and entrepreneur with experience across sectors.\n
   
   
@@ -151,15 +192,15 @@ export class PatronsService {
   
   
        `,
-    },
-    {
-      image: "/assets/home/advisory/VishalKampani.jpg",
-      title: "Vishal Kampani",
-      desig: "Vice Chairman and Managing Director, JM Financial Ltd",
-      link: "https://www.linkedin.com/in/vishal-kampani-0a94942a6/",
-      socialMedia: "linkedin",
-      popupImg: "/assets/home/trustees/vinayakImg.png",
-      popupdesc: `
+        },
+        {
+          image: "/assets/home/advisory/VishalKampani.jpg",
+          title: "Vishal Kampani",
+          desig: "Vice Chairman and Managing Director, JM Financial Ltd",
+          link: "https://www.linkedin.com/in/vishal-kampani-0a94942a6/",
+          socialMedia: "linkedin",
+          popupImg: "/assets/home/trustees/vinayakImg.png",
+          popupdesc: `
         
   Vishal Kampani is the non-executive Vice-Chairman of JM Financial Limited, the Group’s flagship listed company. He has been instrumental in transforming the JM Financial Group into a prominent financial services powerhouse. He launched the Asset Reconstruction Business in 2008 and the Real Estate Finance Business in 2009.\n
   
@@ -170,15 +211,15 @@ export class PatronsService {
   Mr Kampani holds a Master of Commerce from the University of Mumbai and has completed his MS (Finance) from London Business School, University of London.
   
         `,
-    },
-    {
-      image: "/assets/home/advisory/KhurshedDaruvala.jpg",
-      title: "Khurshed Daruvala",
-      desig: "Chairman, Sterling and Wilson Group",
-      link: "https://www.linkedin.com/in/khurshed-daruvala/",
-      socialMedia: "linkedin",
-      popupImg: "/assets/home/trustees/vinayakImg.png",
-      popupdesc: `
+        },
+        {
+          image: "/assets/home/advisory/KhurshedDaruvala.jpg",
+          title: "Khurshed Daruvala",
+          desig: "Chairman, Sterling and Wilson Group",
+          link: "https://www.linkedin.com/in/khurshed-daruvala/",
+          socialMedia: "linkedin",
+          popupImg: "/assets/home/trustees/vinayakImg.png",
+          popupdesc: `
       Khurshed Daruvala, Chairman of Sterling and Wilson Group (S&W), has significantly contributed to the company’s growth and expansion by blending traditional values with a contemporary business approach. As the catalyst behind the company’s evolution into a prominent global powerhouse with diverse businesses across verticals, Mr Daruvala has led from the front since he joined Sterling and Wilson in 1997.\n
   
   He is credited with driving S&W’s emergence as India’s leading MEP (Mechanical, Electrical, and Public Health Engineering) and Renewable Energy solutions provider. Mr Daruvala was instrumental in introducing Solar EPC in 2011, a segment he believed had significant growth potential. This decision transformed S&W’s trajectory and accelerated the company’s growth.\n
@@ -189,13 +230,68 @@ export class PatronsService {
   
   Mr Daruvala holds a bachelor’s degree in commerce from the University of Mumbai and is an Associate Member of the Institute of Chartered Accountants of India (ICAI). He has been part of the Sterling and Wilson Group for approximately 28 years and has been on the board of Sterling and Wilson Renewable Energy Limited since 25 April 2018.	
       `,
-    },
-  ];
+        },
+      ];
 
-    return {
-      patrons,
-      totalCount: patrons.length,
-      lastUpdated: new Date().toISOString()
-    };
+      // Add seed logic here if needed
+    }
+  }
+
+
+  /**
+   * Get a patron by ID
+   * @param id Patron ID
+   * @returns Patron data
+   */
+  async getPatronById(id: string) {
+    const patron = await this.prisma.patron.findUnique({
+      where: { id },
+    });
+
+    if (!patron) {
+      throw new NotFoundException(`Patron with ID ${id} not found`);
+    }
+
+    return patron;
+  }
+
+  /**
+   * Create a new patron
+   * @param data Patron data to create
+   * @returns Created patron
+   */
+  async createPatron(data: CreatePatronDto) {
+    return this.prisma.patron.create({
+      data,
+    });
+  }
+
+  /**
+   * Update a patron by ID
+   * @param id Patron ID
+   * @param data Updated patron data
+   * @returns Updated patron
+   */
+  async updatePatron(id: string, data: UpdatePatronDto) {
+    // Check if patron exists
+    await this.getPatronById(id);
+
+    return this.prisma.patron.update({
+      where: { id },
+      data,
+    });
+  }
+
+  /**
+   * Delete a patron by ID
+   * @param id Patron ID
+   */
+  async deletePatron(id: string) {
+    // Check if patron exists
+    await this.getPatronById(id);
+
+    await this.prisma.patron.delete({
+      where: { id },
+    });
   }
 }

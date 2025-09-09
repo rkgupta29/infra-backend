@@ -279,3 +279,53 @@ model MediaCoverage {
 
   @@map("media_coverage")
 }
+
+model Advisor {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  image       String     // URL to the advisor's image
+  title       String     // Name of the advisor
+  desig       String     // Designation of the advisor
+  popupImg    String?    // Optional popup image URL
+  popupdesc   String     // Description for the popup
+  link        String?    // Optional social media or website link
+  socialMedia String?    // Optional social media platform name
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("advisors")
+}
+
+model Fellow {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  image       String     // URL to the fellow's image
+  title       String     // Name of the fellow
+  desig       String     // Designation of the fellow
+  subtitle    String     // Fellow subtitle (e.g., "Distinguished Fellow (Power)")
+  popupImg    String?    // Optional popup image URL
+  popupdesc   String     // Description for the popup
+  link        String?    // Optional social media or website link
+  socialMedia String?    // Optional social media platform name
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("fellows")
+}
+
+model Patron {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  image       String     // URL to the patron's image
+  title       String     // Name of the patron
+  desig       String     // Designation of the patron
+  popupImg    String?    // Optional popup image URL
+  popupdesc   String     // Description for the popup
+  link        String?    // Optional social media or website link
+  socialMedia String?    // Optional social media platform name
+  order       Int        @default(0) // Order for sorting patrons
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("patrons")
+}
