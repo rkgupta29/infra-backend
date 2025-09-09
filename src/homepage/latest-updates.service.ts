@@ -1,11 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLatestUpdateDto } from './dto/create-latest-update.dto';
 import { UpdateLatestUpdateDto } from './dto/update-latest-update.dto';
 
 @Injectable()
 export class LatestUpdatesService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(LatestUpdatesService.name);
+
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create a new latest update
@@ -94,5 +96,64 @@ export class LatestUpdatesService {
     return this.prisma.latestUpdate.delete({
       where: { id },
     });
+  }
+
+  /**
+   * Get latest content from multiple sources
+   * Returns the most recent newsletter, blog, research paper, and video
+   * @param activeOnly - If true, returns only active items (default: true)
+   * @returns Object containing the latest items from each category
+   */
+  async getLatestContent(activeOnly = true) {
+    try {
+      this.logger.log('Fetching latest content from multiple sources');
+
+      // Build the filter for active status
+      const where = activeOnly ? { active: true } : {};
+
+      // Fetch the latest newsletter
+      const latestNewsletter = await this.prisma.newsletter.findFirst({
+        where,
+        orderBy: { publishedDate: 'desc' },
+      });
+
+      // Fetch the latest blog
+      const latestBlog = await this.prisma.blog.findFirst({
+        where,
+        orderBy: { publishedDate: 'desc' },
+        include: {
+          sectors: true, // Include related sectors
+        },
+      });
+
+      // Fetch the latest research paper
+      const latestResearchPaper = await this.prisma.researchPaper.findFirst({
+        where,
+        orderBy: { date: 'desc' },
+        include: {
+          sectors: true, // Include related sectors
+        },
+      });
+
+      // Fetch the latest video
+      const latestVideo = await this.prisma.video.findFirst({
+        where,
+        orderBy: { date: 'desc' },
+        include: {
+          categories: true, // Include related categories
+        },
+      });
+
+      return {
+        newsletter: latestNewsletter,
+        blog: latestBlog,
+        researchPaper: latestResearchPaper,
+        video: latestVideo,
+        lastUpdated: new Date().toISOString(),
+      };
+    } catch (error) {
+      this.logger.error(`Failed to fetch latest content: ${error.message}`);
+      throw error;
+    }
   }
 }
