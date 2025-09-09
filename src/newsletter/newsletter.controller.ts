@@ -117,6 +117,39 @@ export class NewsletterController {
   }
 
   /**
+   * Get the latest three newsletters
+   * This endpoint is public and does not require authentication
+   */
+  @Get('recent')
+  @ApiOperation({
+    summary: 'Get the latest three newsletters',
+    description: 'Retrieves the most recent three newsletters. This endpoint is public and does not require authentication.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Latest newsletters retrieved successfully',
+    schema: {
+      example: [
+        {
+          id: '60d21b4667d0d8992e610c85',
+          title: 'Infrastructure Insights',
+          subtitle: 'Quarterly Review of Infrastructure Development',
+          version: 'Vol. 1, Issue 2',
+          publishedDate: '2023-06-15T00:00:00.000Z',
+          coverImage: '/assets/images/newsletter-cover-june-2023.jpg',
+          fileUrl: '/assets/pdf/newsletter-june-2023.pdf',
+          active: true,
+          createdAt: '2023-06-10T12:00:00.000Z',
+          updatedAt: '2023-06-10T12:00:00.000Z',
+        },
+        // ... up to three entries
+      ],
+    },
+  })
+  async getRecentNewsletters() {
+    return this.newsletterService.getRecentNewsletters();
+  }
+  /**
    * Get all publication years
    * This endpoint is public and does not require authentication
    */

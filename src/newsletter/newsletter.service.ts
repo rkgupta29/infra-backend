@@ -191,4 +191,25 @@ export class NewsletterService {
       where: { id },
     });
   }
+
+  /**
+   * Get the latest three newsletters
+   * @returns The latest three newsletters
+   */
+  async getRecentNewsletters() {
+    return this.prisma.newsletter.findMany({
+      where: { active: true },
+      orderBy: { publishedDate: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        subtitle: true,
+        version: true,
+        publishedDate: true,
+        coverImage: true,
+        fileUrl: true,
+      },
+      take: 3,
+    });
+  }
 }
