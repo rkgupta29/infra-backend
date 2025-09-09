@@ -10,9 +10,14 @@ import { ContactService } from './contact.service';
 import { LeadsController } from './leads.controller';
 import { LeadsService } from './leads.service';
 import { FileUploadModule } from '../common/file-upload/file-upload.module';
+import { AssociationsModule } from './associations/associations.module';
 
 @Module({
-  imports: [PrismaModule, FileUploadModule],
+  imports: [
+    PrismaModule,
+    FileUploadModule,
+    AssociationsModule
+  ],
   controllers: [
     HomepageController,
     LatestUpdatesController,
@@ -30,7 +35,8 @@ import { FileUploadModule } from '../common/file-upload/file-upload.module';
     HomepageService,
     LatestUpdatesService,
     ContactService,
-    LeadsService
+    LeadsService,
+    AssociationsModule
   ],
 })
 export class HomepageModule { }

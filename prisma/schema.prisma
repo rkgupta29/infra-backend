@@ -363,3 +363,15 @@ model Trustee {
 
   @@map("trustees")
 }
+
+model Association {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  title       String     // Name of the association
+  imageUrl    String     // URL to the association's logo/image
+  order       Int        @default(0) // Order for sorting associations
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("homepage_associations")
+}
