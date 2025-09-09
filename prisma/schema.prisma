@@ -329,3 +329,37 @@ model Patron {
 
   @@map("patrons")
 }
+
+model Team {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  image       String     // URL to the team member's image
+  title       String     // Name of the team member
+  desig       String     // Designation of the team member
+  popupImg    String?    // Optional popup image URL
+  popupdesc   String     // Description for the popup
+  link        String?    // Optional social media or website link
+  socialMedia String?    // Optional social media platform name
+  order       Int        @default(0) // Order for sorting team members
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("team")
+}
+
+model Trustee {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  image       String     // URL to the trustee's image
+  title       String     // Name of the trustee
+  desig       String     // Designation of the trustee
+  popupImg    String?    // Optional popup image URL
+  popupdesc   String     // Description for the popup
+  link        String?    // Optional social media or website link
+  socialMedia String?    // Optional social media platform name
+  order       Int        @default(0) // Order for sorting trustees
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("trustees")
+}
