@@ -1,59 +1,224 @@
-import { Controller, Get, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ParseIntPipe,
+  UseGuards
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth
+} from '@nestjs/swagger';
 import { EngagementsService } from './engagements.service';
+import { CreateEngagementDto, UpdateEngagementDto, QueryEngagementsDto } from './dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Outreach and Engagements')
 @Controller('outreach-and-engagements')
 export class EngagementsController {
-  constructor(private readonly engagementsService: EngagementsService) {}
+  constructor(private readonly engagementsService: EngagementsService) { }
 
+  /**
+   * Get all engagements with optional filtering and pagination
+   */
   @Get()
   @ApiOperation({
     summary: 'Get all engagements',
-    description: 'Retrieves a list of all outreach and engagement items.',
+    description: 'Retrieves all engagements with optional filtering and pagination.'
   })
   @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'List of all engagements',
-    schema: {
-      example: [
-        {
-          id: 1,
-          title: 'Engagement 1',
-          description: 'Description for engagement 1',
-          primary: false,
-        },
-        {
-          id: 2,
-          title: 'Engagement 2',
-          description: 'Description for engagement 2',
-          primary: true,
-        },
-      ],
-    },
+    status: 200,
+    description: 'Engagements retrieved successfully',
   })
-  async getAllEngagements() {
-    return this.engagementsService.allEngagements();
+  async findAll(@Query() queryParams: QueryEngagementsDto) {
+    return this.engagementsService.findAll(queryParams);
   }
 
-  @Get('primary')
+  /**
+   * Get all years that have engagements
+   */
+  @Get('years')
   @ApiOperation({
-    summary: 'Get primary engagement',
-    description: 'Retrieves the primary outreach and engagement item.',
+    summary: 'Get all years with engagements',
+    description: 'Retrieves all years that have at least one engagement.'
   })
   @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Primary engagement',
-    schema: {
-      example: {
-        id: 2,
-        title: 'Engagement 2',
-        description: 'Description for engagement 2',
-        primary: true,
-      },
-    },
+    status: 200,
+    description: 'Years retrieved successfully',
   })
-  async getPrimaryEngagement() {
-    return this.engagementsService.primaryEngagement();
+  async getYears() {
+    return this.engagementsService.getYears();
+  }
+
+  /**
+   * Get the primary event (closest upcoming event)
+   */
+  @Get('primary')
+  @ApiOperation({
+    summary: 'Get primary event',
+    description: 'Retrieves the closest upcoming event or most recent past event if no upcoming events exist.'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Primary event retrieved successfully',
+  })
+  async getPrimaryEvent() {
+    return this.engagementsService.getPrimaryEvent();
+  }
+
+  /**
+   * Get engagements for a specific year
+   */
+  @Get('year/:year')
+  @ApiOperation({
+    summary: 'Get engagements by year',
+    description: 'Retrieves all engagements for a specific year.'
+  })
+  @ApiParam({
+    name: 'year',
+    description: 'Year to filter by (e.g., 2025)',
+    type: Number,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Engagements retrieved successfully',
+  })
+  async findByYear(@Param('year', ParseIntPipe) year: number) {
+    return this.engagementsService.findByYear(year);
+  }
+
+  /**
+   * Get engagements for a specific month and year
+   */
+  @Get('year/:year/month/:month')
+  @ApiOperation({
+    summary: 'Get engagements by month and year',
+    description: 'Retrieves all engagements for a specific month and year.'
+  })
+  @ApiParam({
+    name: 'year',
+    description: 'Year to filter by (e.g., 2025)',
+    type: Number,
+  })
+  @ApiParam({
+    name: 'month',
+    description: 'Month to filter by (1-12)',
+    type: Number,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Engagements retrieved successfully',
+  })
+  async findByMonth(
+    @Param('year', ParseIntPipe) year: number,
+    @Param('month', ParseIntPipe) month: number,
+  ) {
+    return this.engagementsService.findByMonth(year, month);
+  }
+
+  /**
+   * Get a specific engagement by ID
+   */
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get engagement by ID',
+    description: 'Retrieves a specific engagement by its ID.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Engagement ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Engagement retrieved successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Engagement not found',
+  })
+  async findOne(@Param('id') id: string) {
+    return this.engagementsService.findOne(id);
+  }
+
+  /**
+   * Create a new engagement
+   */
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create a new engagement',
+    description: 'Creates a new engagement. Requires authentication.'
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Engagement created successfully',
+  })
+  async create(@Body() createEngagementDto: CreateEngagementDto) {
+    return this.engagementsService.create(createEngagementDto);
+  }
+
+  /**
+   * Update an engagement
+   */
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update an engagement',
+    description: 'Updates an existing engagement. Requires authentication.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Engagement ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Engagement updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Engagement not found',
+  })
+  async update(
+    @Param('id') id: string,
+    @Body() updateEngagementDto: UpdateEngagementDto,
+  ) {
+    return this.engagementsService.update(id, updateEngagementDto);
+  }
+
+  /**
+   * Delete an engagement
+   */
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete an engagement',
+    description: 'Deletes an engagement. Requires authentication.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Engagement ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Engagement deleted successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Engagement not found',
+  })
+  async remove(@Param('id') id: string) {
+    return this.engagementsService.remove(id);
   }
 }
