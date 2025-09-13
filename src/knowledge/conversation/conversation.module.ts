@@ -8,5 +8,6 @@ import { FileUploadModule } from '../../common/file-upload/file-upload.module';
   imports: [PrismaModule, FileUploadModule],
   controllers: [ConversationController],
   providers: [ConversationService],
+  exports: [ConversationService],
 })
-export class KnowledgeConversationModule {}
+export class KnowledgeConversationModule { }
