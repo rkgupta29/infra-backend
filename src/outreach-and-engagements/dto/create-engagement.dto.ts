@@ -16,7 +16,7 @@ export class CoverDto {
 
 export class CreateEngagementDto {
     @ApiProperty({
-        description: 'Title of the engagement',
+        description: 'Title of the engagement/event',
         example: 'Annual Infrastructure Conference 2025'
     })
     @IsNotEmpty()
@@ -24,23 +24,39 @@ export class CreateEngagementDto {
     title: string;
 
     @ApiProperty({
-        description: 'Tag for the engagement',
-        example: 'Conference'
+        description: 'Location of the engagement/event',
+        example: 'New Delhi, India'
     })
     @IsNotEmpty()
     @IsString()
-    tag: string;
+    location: string;
 
     @ApiProperty({
-        description: 'Date of the engagement in UTC format',
+        description: 'Description of the engagement/event',
+        example: 'A comprehensive conference covering the latest in infrastructure development'
+    })
+    @IsNotEmpty()
+    @IsString()
+    description: string;
+
+    @ApiProperty({
+        description: 'Date of the engagement/event in UTC format',
         example: '2025-10-15T09:00:00.000Z'
     })
     @IsDateString()
     @IsNotEmpty()
     date: string;
 
+    @ApiProperty({
+        description: 'Type tag (e.g., "Conference", "Workshop")',
+        example: 'Conference'
+    })
+    @IsNotEmpty()
+    @IsString()
+    tag: string;
+
     @ApiPropertyOptional({
-        description: 'Subtitle of the engagement in markdown format',
+        description: 'Optional subtitle or markdown content',
         example: '## Join us for the premier infrastructure event of the year'
     })
     @IsOptional()
@@ -48,19 +64,28 @@ export class CreateEngagementDto {
     subtitle?: string;
 
     @ApiPropertyOptional({
-        description: 'URL to the report or additional information',
+        description: 'Optional URL to a report PDF',
         example: 'https://example.com/reports/conference-2025.pdf'
     })
     @IsOptional()
     @IsString()
     reportUrl?: string;
 
-    @ApiProperty({
-        description: 'Array of cover objects containing url and description',
+    @ApiPropertyOptional({
+        description: 'Optional array of cover objects containing url and description',
         type: [CoverDto]
     })
+    @IsOptional()
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => CoverDto)
-    covers: CoverDto[];
+    covers?: CoverDto[];
+
+    @ApiPropertyOptional({
+        description: 'Whether the engagement is active',
+        example: true,
+        default: true
+    })
+    @IsOptional()
+    active?: boolean;
 }

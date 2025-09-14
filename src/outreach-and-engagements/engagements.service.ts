@@ -20,8 +20,19 @@ export class EngagementsService {
    */
   async create(createEngagementDto: CreateEngagementDto) {
     try {
+      // Make sure the data structure matches the Prisma schema
       const engagement = await (this.prisma as ExtendedPrismaService).engagement.create({
-        data: createEngagementDto,
+        data: {
+          title: createEngagementDto.title,
+          description: createEngagementDto.description,
+          date: new Date(createEngagementDto.date),
+          location: createEngagementDto.location,
+          tag: createEngagementDto.tag,
+          subtitle: createEngagementDto.subtitle,
+          reportUrl: createEngagementDto.reportUrl,
+          covers: createEngagementDto.covers,
+          active: createEngagementDto.active ?? true,
+        },
       });
 
       this.logger.log(`Created new engagement: ${createEngagementDto.title}`);
@@ -237,9 +248,22 @@ export class EngagementsService {
       await this.findOne(id);
 
       // Update engagement
+      const data: any = {};
+
+      // Only include fields that are present in the DTO
+      if (updateEngagementDto.title !== undefined) data.title = updateEngagementDto.title;
+      if (updateEngagementDto.description !== undefined) data.description = updateEngagementDto.description;
+      if (updateEngagementDto.date !== undefined) data.date = new Date(updateEngagementDto.date);
+      if (updateEngagementDto.location !== undefined) data.location = updateEngagementDto.location;
+      if (updateEngagementDto.tag !== undefined) data.tag = updateEngagementDto.tag;
+      if (updateEngagementDto.subtitle !== undefined) data.subtitle = updateEngagementDto.subtitle;
+      if (updateEngagementDto.reportUrl !== undefined) data.reportUrl = updateEngagementDto.reportUrl;
+      if (updateEngagementDto.covers !== undefined) data.covers = updateEngagementDto.covers;
+      if (updateEngagementDto.active !== undefined) data.active = updateEngagementDto.active;
+
       const updatedEngagement = await (this.prisma as ExtendedPrismaService).engagement.update({
         where: { id },
-        data: updateEngagementDto,
+        data,
       });
 
       this.logger.log(`Updated engagement: ${id}`);

@@ -375,3 +375,20 @@ model Association {
 
   @@map("homepage_associations")
 }
+
+model Engagement {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  title       String     // Title of the engagement/event
+  description String     // Description of the engagement/event
+  date        DateTime   // Date of the engagement/event
+  location    String     // Location of the engagement/event
+  tag         String     // Type tag (e.g., "Conference", "Workshop")
+  subtitle    String?    // Optional subtitle or markdown content
+  reportUrl   String?    // Optional URL to a report PDF
+  covers      Json?      // Optional array of cover images with descriptions
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("engagements")
+}

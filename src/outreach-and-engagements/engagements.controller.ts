@@ -154,7 +154,7 @@ export class EngagementsController {
    */
   @Post()
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Create a new engagement',
     description: 'Creates a new engagement. Requires authentication.'
@@ -172,7 +172,7 @@ export class EngagementsController {
    */
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Update an engagement',
     description: 'Updates an existing engagement. Requires authentication.'
@@ -201,7 +201,7 @@ export class EngagementsController {
    */
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Delete an engagement',
     description: 'Deletes an engagement. Requires authentication.'

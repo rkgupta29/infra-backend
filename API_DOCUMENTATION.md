@@ -243,6 +243,90 @@ Delete a homepage section (ADMIN/SUPERADMIN)
 
 **Note:** For detailed documentation and examples, see [HOMEPAGE_CONTENT_API.md](./HOMEPAGE_CONTENT_API.md)
 
+## Outreach and Engagements API
+
+The Outreach and Engagements API allows you to manage events, conferences, and other engagements.
+
+### Base URL
+```
+/outreach-and-engagements
+```
+
+### Endpoints
+
+#### GET /outreach-and-engagements
+Get all engagements with optional filtering and pagination (public)
+
+**Query Parameters:**
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `sortBy`: Field to sort by (default: 'date')
+- `sortOrder`: Sort direction ('asc' or 'desc', default: 'desc')
+- `year`: Filter by year (optional)
+- `month`: Filter by month (1-12, requires year parameter)
+
+#### GET /outreach-and-engagements/years
+Get all years that have engagements (public)
+
+#### GET /outreach-and-engagements/primary
+Get the primary event - closest upcoming event or most recent past event (public)
+
+#### GET /outreach-and-engagements/year/:year
+Get engagements for a specific year (public)
+
+#### GET /outreach-and-engagements/year/:year/month/:month
+Get engagements for a specific month and year (public)
+
+#### GET /outreach-and-engagements/:id
+Get a specific engagement by ID (public)
+
+#### POST /outreach-and-engagements
+Create a new engagement (ADMIN/SUPERADMIN)
+
+**Request Body:**
+```json
+{
+  "title": "Annual Infrastructure Conference 2025",
+  "description": "A comprehensive conference covering the latest in infrastructure development",
+  "date": "2025-10-15T09:00:00.000Z",
+  "location": "New Delhi, India",
+  "tag": "Conference",
+  "subtitle": "## Join us for the premier infrastructure event of the year",
+  "reportUrl": "https://example.com/reports/conference-2025.pdf",
+  "covers": [
+    {
+      "url": "https://example.com/images/conference-cover.jpg",
+      "desc": "Conference promotional image"
+    }
+  ],
+  "active": true
+}
+```
+
+#### PATCH /outreach-and-engagements/:id
+Update an engagement (ADMIN/SUPERADMIN)
+
+#### DELETE /outreach-and-engagements/:id
+Delete an engagement (ADMIN/SUPERADMIN)
+
+### Engagement Model
+```typescript
+{
+  id: string;           // MongoDB ObjectId
+  title: string;        // Title of the engagement/event
+  description: string;  // Description of the engagement/event
+  date: Date;           // Date of the engagement/event
+  location: string;     // Location of the engagement/event
+  tag: string;          // Type tag (e.g., "Conference", "Workshop")
+  subtitle?: string;    // Optional subtitle or markdown content
+  reportUrl?: string;   // Optional URL to a report PDF
+  covers?: object[];    // Optional array of cover images with descriptions
+  active: boolean;      // Whether the engagement is active
+  createdAt: Date;      // Creation timestamp
+  updatedAt: Date;      // Last update timestamp
+}
+```
+
 ## Error Handling
 
 The API returns appropriate HTTP status codes and error messages:
