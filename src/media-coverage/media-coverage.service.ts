@@ -46,11 +46,20 @@ export class MediaCoverageService {
       );
 
       // Create media coverage with image URL
+      const mediaCoverageData = {
+        ...createMediaCoverageDto,
+        coverImage: imageUrl,
+      };
+
+      // Delete undefined fields
+      Object.keys(mediaCoverageData).forEach(key => {
+        if (mediaCoverageData[key] === undefined) {
+          delete mediaCoverageData[key];
+        }
+      });
+
       return this.prisma.mediaCoverage.create({
-        data: {
-          ...createMediaCoverageDto,
-          coverImage: imageUrl,
-        },
+        data: mediaCoverageData,
       });
     } catch (error) {
       this.logger.error(`Failed to create media coverage: ${error.message}`);

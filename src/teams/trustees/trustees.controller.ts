@@ -16,7 +16,6 @@ import {
   ApiResponse,
   ApiTags,
   ApiParam,
-  ApiQuery,
   ApiBearerAuth
 } from '@nestjs/swagger';
 import { TrusteesService } from './trustees.service';
@@ -73,7 +72,7 @@ export class TrusteesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Create a new trustee',
     description: 'Creates a new trustee. Requires admin authentication.'
@@ -100,7 +99,7 @@ export class TrusteesController {
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Update a trustee',
     description: 'Updates an existing trustee by ID. Requires admin authentication.'
@@ -132,7 +131,7 @@ export class TrusteesController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete a trustee',

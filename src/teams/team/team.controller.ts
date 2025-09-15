@@ -16,7 +16,6 @@ import {
   ApiResponse,
   ApiTags,
   ApiParam,
-  ApiQuery,
   ApiBearerAuth
 } from '@nestjs/swagger';
 import { TeamService } from './team.service';
@@ -73,7 +72,7 @@ export class TeamController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Create a new team member',
     description: 'Creates a new team member. Requires admin authentication.'
@@ -100,7 +99,7 @@ export class TeamController {
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Update a team member',
     description: 'Updates an existing team member by ID. Requires admin authentication.'
@@ -132,7 +131,7 @@ export class TeamController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth("JWT-auth")
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete a team member',

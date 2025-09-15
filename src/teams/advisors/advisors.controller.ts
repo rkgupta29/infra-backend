@@ -58,7 +58,7 @@ export class AdvisorsController {
   @Get('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get all advisors with pagination (admin)',
     description: 'Admin endpoint to retrieve all advisors with pagination'
@@ -85,7 +85,7 @@ export class AdvisorsController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get advisor by ID',
     description: 'Retrieve a specific advisor by ID'
@@ -108,7 +108,7 @@ export class AdvisorsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Create a new advisor',
@@ -139,7 +139,7 @@ export class AdvisorsController {
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Update an advisor',
@@ -168,7 +168,7 @@ export class AdvisorsController {
   @Patch(':id/toggle-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Toggle advisor active status',
     description: 'Toggle the active status of an advisor'
@@ -183,7 +183,7 @@ export class AdvisorsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Delete an advisor',
     description: 'Delete an advisor and associated files'

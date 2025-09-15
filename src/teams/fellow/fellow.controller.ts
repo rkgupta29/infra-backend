@@ -58,7 +58,7 @@ export class FellowController {
   @Get('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get all fellows with pagination (admin)',
     description: 'Admin endpoint to retrieve all fellows with pagination'
@@ -85,7 +85,7 @@ export class FellowController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get fellow by ID',
     description: 'Retrieve a specific fellow by ID'
@@ -108,7 +108,7 @@ export class FellowController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Create a new fellow',
@@ -139,7 +139,7 @@ export class FellowController {
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Update a fellow',
@@ -168,7 +168,7 @@ export class FellowController {
   @Patch(':id/toggle-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Toggle fellow active status',
     description: 'Toggle the active status of a fellow'
@@ -183,7 +183,7 @@ export class FellowController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Delete a fellow',
     description: 'Delete a fellow and associated files'
