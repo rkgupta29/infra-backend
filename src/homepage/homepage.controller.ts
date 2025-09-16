@@ -1,20 +1,20 @@
-import { 
-  Body, 
-  Controller, 
-  Delete, 
-  Get, 
-  Param, 
-  Patch, 
-  Post, 
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { 
-  ApiBearerAuth, 
-  ApiBody, 
-  ApiOperation, 
-  ApiResponse, 
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
   ApiTags,
   ApiParam,
   ApiUnauthorizedResponse,
@@ -30,21 +30,21 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UpdateSectionDto } from './dto/update-section.dto';
 
 @ApiTags('Homepage Content Management')
-@Controller('content/home')
+@Controller('content')
 export class HomepageController {
-  constructor(private readonly service: HomepageService) {}
+  constructor(private readonly service: HomepageService) { }
 
   /**
    * Get all homepage sections
    * This endpoint is public and returns all active sections
    */
   @Get()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get all homepage sections',
     description: 'Retrieves all active homepage sections. This endpoint is public and does not require authentication.'
   })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'All homepage sections retrieved successfully',
     schema: {
       example: [
@@ -86,17 +86,17 @@ export class HomepageController {
    * This endpoint is public and returns the section data
    */
   @Get(':key')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get a specific homepage section',
     description: 'Retrieves a specific homepage section by its key. This endpoint is public and does not require authentication.'
   })
-  @ApiParam({ 
-    name: 'key', 
+  @ApiParam({
+    name: 'key',
     description: 'The unique identifier for the section (e.g., hero, about, features)',
     example: 'hero'
   })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Section retrieved successfully',
     schema: {
       example: {
@@ -111,7 +111,7 @@ export class HomepageController {
       }
     }
   })
-  @ApiNotFoundResponse({ 
+  @ApiNotFoundResponse({
     description: 'Section not found (will create default if it doesn\'t exist)'
   })
   async getSection(@Param('key') key: string) {
@@ -169,7 +169,7 @@ export class HomepageController {
    * This endpoint is public and returns all section keys for the homepage
    */
   @Get('/keys/list')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get all homepage section keys',
     description: 'Returns an array of all section keys for the homepage. This endpoint is public.'
   })
@@ -192,30 +192,30 @@ export class HomepageController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SUPERADMIN', 'ADMIN')
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Update a homepage section completely',
     description: 'Updates a homepage section with completely new data. This endpoint requires ADMIN or SUPERADMIN authentication.'
   })
-  @ApiParam({ 
-    name: 'key', 
+  @ApiParam({
+    name: 'key',
     description: 'The unique identifier for the section to update',
     example: 'hero'
   })
-  @ApiBody({ 
+  @ApiBody({
     type: UpdateSectionDto,
     description: 'The complete data object for the section'
   })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Section updated successfully'
   })
-  @ApiUnauthorizedResponse({ 
+  @ApiUnauthorizedResponse({
     description: 'Unauthorized - Invalid or missing JWT token'
   })
-  @ApiForbiddenResponse({ 
+  @ApiForbiddenResponse({
     description: 'Forbidden - Insufficient permissions'
   })
-  @ApiBadRequestResponse({ 
+  @ApiBadRequestResponse({
     description: 'Bad Request - Invalid data format'
   })
   @HttpCode(HttpStatus.OK)
@@ -231,26 +231,26 @@ export class HomepageController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SUPERADMIN', 'ADMIN')
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Toggle section active status',
     description: 'Toggles the active status of a homepage section. This endpoint requires ADMIN or SUPERADMIN authentication.'
   })
-  @ApiParam({ 
-    name: 'key', 
+  @ApiParam({
+    name: 'key',
     description: 'The unique identifier for the section to toggle',
     example: 'hero'
   })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Section status toggled successfully'
   })
-  @ApiUnauthorizedResponse({ 
+  @ApiUnauthorizedResponse({
     description: 'Unauthorized - Invalid or missing JWT token'
   })
-  @ApiForbiddenResponse({ 
+  @ApiForbiddenResponse({
     description: 'Forbidden - Insufficient permissions'
   })
-  @ApiNotFoundResponse({ 
+  @ApiNotFoundResponse({
     description: 'Section not found'
   })
   @HttpCode(HttpStatus.OK)
@@ -266,26 +266,26 @@ export class HomepageController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SUPERADMIN', 'ADMIN')
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Delete a homepage section',
     description: 'Permanently deletes a homepage section. This action cannot be undone. This endpoint requires ADMIN or SUPERADMIN authentication.'
   })
-  @ApiParam({ 
-    name: 'key', 
+  @ApiParam({
+    name: 'key',
     description: 'The unique identifier for the section to delete',
     example: 'hero'
   })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Section deleted successfully'
   })
-  @ApiUnauthorizedResponse({ 
+  @ApiUnauthorizedResponse({
     description: 'Unauthorized - Invalid or missing JWT token'
   })
-  @ApiForbiddenResponse({ 
+  @ApiForbiddenResponse({
     description: 'Forbidden - Insufficient permissions'
   })
-  @ApiNotFoundResponse({ 
+  @ApiNotFoundResponse({
     description: 'Section not found'
   })
   @HttpCode(HttpStatus.OK)

@@ -35,13 +35,12 @@ export class CreateMediaCoverageDto {
     date: string;
 
     @ApiProperty({
-        description: 'URL to the cover image (will be set automatically after upload)',
+        description: 'URL to the cover image',
         example: '/assets/images/media-coverage/infrastructure-development.jpg',
-        required: false,
     })
-    @IsOptional()
+    @IsNotEmpty({ message: 'Cover image URL is required' })
     @IsString()
-    coverImage?: string;
+    coverImage: string;
 
     @ApiProperty({
         description: 'Year of publication for filtering',

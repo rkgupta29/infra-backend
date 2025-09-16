@@ -1,54 +1,25 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { FileUploadService } from '../common/file-upload/file-upload.service';
 import { CreateMediaCoverageDto } from './dto/create-media-coverage.dto';
 import { UpdateMediaCoverageDto } from './dto/update-media-coverage.dto';
 import { QueryMediaCoverageDto, SortOrder } from './dto/query-media-coverage.dto';
-import type { Multer } from 'multer';
 
 @Injectable()
 export class MediaCoverageService {
   private readonly logger = new Logger(MediaCoverageService.name);
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly fileUploadService: FileUploadService,
-  ) { }
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
-   * Create a new media coverage with image upload
+   * Create a new media coverage
    * @param createMediaCoverageDto - Data for the new media coverage
-   * @param imageFile - The image file to upload
    * @returns The created media coverage
    */
-  async create(
-    createMediaCoverageDto: CreateMediaCoverageDto,
-    imageFile: Multer.File,
-  ) {
+  async create(createMediaCoverageDto: CreateMediaCoverageDto) {
     try {
-      // Validate image file
-      if (!imageFile) {
-        throw new BadRequestException('Cover image file is required');
-      }
-
-      // Generate unique filename with timestamp
-      const timestamp = Date.now();
-      const sanitizedTitle = createMediaCoverageDto.title
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '')
-        .substring(0, 30);
-
-      // Upload image file
-      const imageUrl = await this.fileUploadService.uploadImage(
-        imageFile,
-        `media-coverage-${sanitizedTitle}-${createMediaCoverageDto.publicationYear}-${timestamp}`
-      );
-
-      // Create media coverage with image URL
+      // Create media coverage with provided data
       const mediaCoverageData = {
         ...createMediaCoverageDto,
-        coverImage: imageUrl,
       };
 
       // Delete undefined fields
@@ -162,11 +133,6 @@ export class MediaCoverageService {
     const mediaCoverage = await this.findOne(id);
 
     try {
-      // Delete the image file
-      if (mediaCoverage.coverImage) {
-        await this.fileUploadService.deleteFile(mediaCoverage.coverImage);
-      }
-
       // Delete the media coverage record
       return this.prisma.mediaCoverage.delete({
         where: { id },

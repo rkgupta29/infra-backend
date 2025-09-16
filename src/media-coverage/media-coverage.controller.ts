@@ -26,8 +26,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import type { Multer } from 'multer';
+// File upload imports removed
 import { MediaCoverageService } from './media-coverage.service';
 import { CreateMediaCoverageDto } from './dto/create-media-coverage.dto';
 import { QueryMediaCoverageDto } from './dto/query-media-coverage.dto';
@@ -287,7 +286,6 @@ export class MediaCoverageController {
     summary: 'Create a new media coverage',
     description: 'Creates a new media coverage with image upload. This endpoint requires ADMIN or SUPERADMIN authentication.',
   })
-  @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
@@ -316,13 +314,13 @@ export class MediaCoverageController {
           type: 'boolean',
           example: true,
         },
-        file: {
+        coverImage: {
           type: 'string',
-          format: 'binary',
-          description: 'Cover image file to upload',
+          example: '/assets/images/media-coverage/infrastructure-development.jpg',
+          description: 'URL to the cover image',
         },
       },
-      required: ['title', 'authorName', 'date', 'publicationYear', 'file'],
+      required: ['title', 'authorName', 'date', 'publicationYear', 'coverImage'],
     },
   })
   @ApiResponse({
@@ -335,22 +333,14 @@ export class MediaCoverageController {
   @ApiForbiddenResponse({
     description: 'Forbidden - Insufficient permissions',
   })
-  @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Body() createMediaCoverageDto: CreateMediaCoverageDto,
-    @UploadedFile() file: Multer.File,
-  ) {
+  async create(@Body() createMediaCoverageDto: CreateMediaCoverageDto) {
     // Convert publicationYear from string to number if it's a string
     if (typeof createMediaCoverageDto.publicationYear === 'string') {
       createMediaCoverageDto.publicationYear = parseInt(createMediaCoverageDto.publicationYear as any, 10);
     }
 
-    if (!file) {
-      throw new BadRequestException('Cover image file is required');
-    }
-
-    return this.service.create(createMediaCoverageDto, file);
+    return this.service.create(createMediaCoverageDto);
   }
 
   /**
