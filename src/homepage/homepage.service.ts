@@ -5,7 +5,7 @@ import * as path from 'path';
 
 @Injectable()
 export class HomepageService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get a specific section by key
@@ -167,34 +167,17 @@ export class HomepageService {
   }
 
   /**
-   * Seed homepage content from a JSON file and replace all homepage sections.
-   * This will delete all existing homepage sections and re-add them from the JSON file.
-   * The JSON file should be in the same folder and named "homepage.seed.json".
+   * Seed homepage content from provided JSON data and replace all homepage sections.
+   * This will delete all existing homepage sections and re-add them from the provided JSON array.
+   * @param sections - Array of section objects to seed
    */
- 
-
-  async seedHomepageContent() {
-    // Path to the JSON file in the same folder as this service
-    
-    const filePath = path.join(process.cwd(), 'src', 'homepage', 'homepage.seed.json');
-    if (!fs.existsSync(filePath)) {
-      throw new NotFoundException('Seed file homepage.seed.json not found');
-    }
-
-    let jsonData: any;
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      jsonData = JSON.parse(fileContent);
-    } catch (err) {
-      throw new BadRequestException('Failed to read or parse homepage.seed.json');
-    }
-
-    if (!Array.isArray(jsonData)) {
-      throw new BadRequestException('Seed file must contain an array of sections');
+  async seedHomepageContent(sections: any[]) {
+    if (!Array.isArray(sections)) {
+      throw new BadRequestException('Input must be an array of sections');
     }
 
     // Validate each section
-    for (const section of jsonData) {
+    for (const section of sections) {
       if (
         !section.sectionKey ||
         typeof section.sectionKey !== 'string' ||
@@ -204,7 +187,7 @@ export class HomepageService {
         Array.isArray(section.data)
       ) {
         throw new BadRequestException(
-          `Invalid section format in seed file for sectionKey: ${section.sectionKey}`
+          `Invalid section format in input for sectionKey: ${section.sectionKey}`
         );
       }
     }
@@ -212,7 +195,7 @@ export class HomepageService {
     await this.prisma.homepageSection.deleteMany({});
 
     const createdSections: any[] = [];
-    for (const section of jsonData) {
+    for (const section of sections) {
       createdSections.push(
         await this.prisma.homepageSection.create({
           data: {

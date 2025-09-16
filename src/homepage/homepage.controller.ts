@@ -26,12 +26,13 @@ import { HomepageService } from './homepage.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-// Remove UserRole import if not available from @prisma/client
+// Remove UserRole import if not available f  rom @prisma/client
 import { UpdateSectionDto } from './dto/update-section.dto';
 
 @ApiTags('Homepage Content Management')
-@Controller('content')
+@Controller('/content')//home
 export class HomepageController {
+
   constructor(private readonly service: HomepageService) { }
 
   /**
@@ -294,9 +295,45 @@ export class HomepageController {
   }
 
   @Post('/seed')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPERADMIN', 'ADMIN')
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
-    summary: 'Seed the homepage with default sections',
-    description: 'Seeds the homepage with default sections. This endpoint requires ADMIN or SUPERADMIN authentication.'
+    summary: 'Seed the homepage with provided sections',
+    description: 'Seeds the homepage with provided sections JSON. This endpoint requires ADMIN or SUPERADMIN authentication.'
+  })
+  @ApiBody({
+    description: 'JSON array of homepage sections to seed',
+    schema: {
+      example: [
+        {
+          sectionKey: 'hero',
+          data: {
+            title: 'Independent think tank',
+            subtitle: 'seeking to impact India\'s infrastructure landscape',
+            description: 'Helping shape public discourse and policy interventions through action research and advocacy.',
+            backgroundImage: '/images/hero-bg.jpg',
+            cta: [
+              { text: 'Learn More', target: '/about', variant: 'primary' },
+              { text: 'Contact Us', target: '/contact', variant: 'secondary' }
+            ]
+          }
+        },
+        {
+          sectionKey: 'about',
+          data: {
+            title: 'About Us',
+            description: 'We are dedicated to improving infrastructure policy in India.',
+            image: '/images/about.jpg',
+            subtitles: ['Research Excellence', 'Policy Impact', 'Collaborative Approach'],
+            paragraphs: [
+              { title: 'Our Mission', content: 'To transform infrastructure policy through research.' },
+              { title: 'Our Vision', content: 'A future with sustainable and inclusive infrastructure.' }
+            ]
+          }
+        }
+      ]
+    }
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -309,7 +346,7 @@ export class HomepageController {
     description: 'Forbidden - Insufficient permissions'
   })
   @HttpCode(HttpStatus.OK)
-  async seedHomepage() {
-    return this.service.seedHomepageContent();
+  async seedHomepage(@Body() sections: any) {
+    return this.service.seedHomepageContent(sections);
   }
 }
