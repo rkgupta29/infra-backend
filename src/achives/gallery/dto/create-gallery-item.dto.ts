@@ -5,9 +5,11 @@ export class CreateGalleryItemDto {
     @ApiProperty({
         description: 'URL to the image file (will be set automatically after upload)',
         example: '/assets/images/gallery/event-2023-01.jpg',
+        required: false,
     })
+    @IsOptional()
     @IsString()
-    image: string;
+    image?: string;
 
     @ApiProperty({
         description: 'Name of the event',

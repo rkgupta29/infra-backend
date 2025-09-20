@@ -5,10 +5,11 @@ export class CreateResearchPaperDto {
   @ApiProperty({
     description: 'The title of the research paper',
     example: 'Study on the implementation of compensatory afforestation in India',
+    required: false,
   })
   @IsString()
-  @IsNotEmpty()
-  title: string;
+  @IsOptional()
+  title?: string;
 
   @ApiProperty({
     description: 'The description of the research paper',
@@ -21,10 +22,11 @@ export class CreateResearchPaperDto {
   @ApiProperty({
     description: 'The publication date of the research paper',
     example: '2023-01-15',
+    required: false,
   })
   @IsDateString()
-  @IsNotEmpty()
-  date: string;
+  @IsOptional()
+  date?: string;
 
   @ApiProperty({
     description: 'Whether the research paper is active',

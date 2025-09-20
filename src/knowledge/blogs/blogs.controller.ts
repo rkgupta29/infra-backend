@@ -97,7 +97,8 @@ export class BlogsController {
           description: 'Array of sector IDs associated with this blog',
         },
       },
-      required: ['coverImageFile', 'docFile', 'title', 'authorName', 'authorDesignation', 'publishedDate', 'content', 'sectorIds'],
+      // All fields are optional
+      required: [],
     },
   })
   @ApiResponse({

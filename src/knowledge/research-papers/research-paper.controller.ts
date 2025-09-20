@@ -36,7 +36,7 @@ import { Roles, UserRole } from '../../auth/decorators/roles.decorator';
 @ApiTags('Knowledge')
 @Controller('knowledge/research-papers')
 export class ResearchPapersController {
-  constructor(private readonly service: ResearchPapersService) {}
+  constructor(private readonly service: ResearchPapersService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -85,7 +85,7 @@ export class ResearchPapersController {
           description: 'Array of sector IDs associated with this research paper',
         },
       },
-      required: ['imageFile', 'pdfFile', 'title', 'description', 'date', 'sectorIds'],
+      required: ['imageFile', 'pdfFile', 'description', 'sectorIds'],
     },
   })
   @ApiResponse({
@@ -111,19 +111,19 @@ export class ResearchPapersController {
   ) {
     // Parse form data properly
     const createResearchPaperDto: CreateResearchPaperDto = {
-      title: body.title,
+      title: body.title || undefined,
       description: body.description,
-      date: body.date,
+      date: body.date || undefined,
       // Parse active as boolean
       active: body.active === 'true' || body.active === true,
       // Parse sectorIds as array
-      sectorIds: Array.isArray(body.sectorIds) 
-        ? body.sectorIds 
-        : body.sectorIds?.includes(',') 
-          ? body.sectorIds.split(',') 
+      sectorIds: Array.isArray(body.sectorIds)
+        ? body.sectorIds
+        : body.sectorIds?.includes(',')
+          ? body.sectorIds.split(',')
           : [body.sectorIds]
     };
-    
+
     return this.service.create(createResearchPaperDto, files);
   }
 

@@ -12,6 +12,7 @@ import {
   HttpStatus,
   HttpCode,
   BadRequestException,
+  UsePipes,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -34,9 +35,12 @@ import { QueryGalleryDto } from './dto/query-gallery.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { GalleryFormDataPipe } from './pipes/gallery-form-data.pipe';
+import { GalleryFormDataInterceptor } from './interceptors/gallery-form-data.interceptor';
 
 @ApiTags('Archives - Gallery')
 @Controller('archives/gallery')
+@UseInterceptors(GalleryFormDataInterceptor)
 export class GalleryController {
   constructor(private readonly service: GalleryService) { }
 
@@ -275,16 +279,12 @@ export class GalleryController {
     description: 'Forbidden - Insufficient permissions',
   })
   @UseInterceptors(FileInterceptor('file'))
+  @UsePipes(new GalleryFormDataPipe())
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createGalleryItemDto: CreateGalleryItemDto,
     @UploadedFile() file: Multer.File,
   ) {
-    // Convert year from string to number if it's a string
-    if (typeof createGalleryItemDto.year === 'string') {
-      createGalleryItemDto.year = parseInt(createGalleryItemDto.year as any, 10);
-    }
-
     if (!file) {
       throw new BadRequestException('Image file is required');
     }

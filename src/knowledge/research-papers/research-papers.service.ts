@@ -20,7 +20,7 @@ export class ResearchPapersService {
     private readonly prisma: PrismaService,
     private readonly sectorsService: SectorsService,
     private readonly fileUploadService: FileUploadService,
-  ) {}
+  ) { }
 
   /**
    * Create a new research paper
@@ -40,11 +40,11 @@ export class ResearchPapersService {
       const sectorIds = Array.isArray(createResearchPaperDto.sectorIds)
         ? createResearchPaperDto.sectorIds
         : [createResearchPaperDto.sectorIds].filter(Boolean);
-      
+
       if (!sectorIds.length) {
         throw new BadRequestException('At least one sector ID is required');
       }
-      
+
       // Validate that all sectors exist
       await this.sectorsService.validateSectorIds(sectorIds);
 
@@ -52,54 +52,65 @@ export class ResearchPapersService {
       if (!files.imageFile || files.imageFile.length === 0) {
         throw new BadRequestException('Image file is required');
       }
-      
+
       if (!files.pdfFile || files.pdfFile.length === 0) {
         throw new BadRequestException('PDF file is required');
       }
-      
+
       const imageFile = files.imageFile[0];
       const pdfFile = files.pdfFile[0];
-      
+
       // Generate unique filenames with timestamp and hash
       const timestamp = Date.now();
       const imageHash = Math.random().toString(36).substring(2, 10);
       const pdfHash = Math.random().toString(36).substring(2, 10);
       const sanitizedTitle = createResearchPaperDto.title
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '')
-        .substring(0, 30); // Shorter title to accommodate hash
-      
+        ? createResearchPaperDto.title
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          .substring(0, 30) // Shorter title to accommodate hash
+        : `research-${timestamp}`; // Default if no title provided
+
       // Upload files with unique filenames
       const imageUrl = await this.fileUploadService.uploadImage(
-        imageFile, 
+        imageFile,
         `research-paper-img-${sanitizedTitle}-${timestamp}-${imageHash}`
       );
-      
+
       const pdfUrl = await this.fileUploadService.uploadPdf(
-        pdfFile, 
+        pdfFile,
         `research-paper-pdf-${sanitizedTitle}-${timestamp}-${pdfHash}`
       );
 
-      // Parse date string to Date object
-      const date = new Date(createResearchPaperDto.date);
+      // Parse date string to Date object if provided, otherwise use current date
+      const date = createResearchPaperDto.date ? new Date(createResearchPaperDto.date) : new Date();
 
       // Create research paper with file URLs
+      // Prepare data for creating research paper
+      const paperData: any = {
+        image: imageUrl,
+        description: createResearchPaperDto.description,
+        link: pdfUrl,
+        date,
+        active: createResearchPaperDto.active !== undefined ? createResearchPaperDto.active : true,
+        sectorIds: sectorIds,
+      };
+
+      // Add title if provided
+      if (createResearchPaperDto.title) {
+        paperData.title = createResearchPaperDto.title;
+      } else {
+        paperData.title = ''; // Empty string as default
+      }
+
       const researchPaper = await (this.prisma as ExtendedPrismaService).researchPaper.create({
-        data: {
-          image: imageUrl,
-          title: createResearchPaperDto.title,
-          description: createResearchPaperDto.description,
-          link: pdfUrl,
-          date,
-          active: createResearchPaperDto.active !== undefined ? createResearchPaperDto.active : true,
-          sectorIds: sectorIds,
-        },
+        data: paperData,
         include: {
           sectors: true, // Include related sectors
         },
       });
-      
+
       this.logger.log(`Created new research paper: ${createResearchPaperDto.title}`);
       return researchPaper;
     } catch (error) {
@@ -118,12 +129,12 @@ export class ResearchPapersService {
    */
   async findAll(activeOnly = false, sectorId?: string, page = 1, limit = 10) {
     const where: any = {};
-    
+
     // Filter by active status if requested
     if (activeOnly) {
       where.active = true;
     }
-    
+
     // Filter by sector if provided
     if (sectorId) {
       where.sectorIds = {
@@ -295,7 +306,7 @@ export class ResearchPapersService {
       },
       // ... other static data
     ];
-    
+
     return {
       researchPapers,
       totalCount: researchPapers.length,

@@ -35,6 +35,7 @@ import { QueryLeadsDto } from './dto/query-leads.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { LeadsQueryPipe } from './pipes/leads-query.pipe';
 
 @ApiTags('Contact Form Submissions')
 @Controller('contact/leads')
@@ -114,7 +115,7 @@ export class LeadsController {
     @ApiForbiddenResponse({
         description: 'Forbidden - Insufficient permissions',
     })
-    async findAll(@Query() queryLeadsDto: QueryLeadsDto) {
+    async findAll(@Query(new LeadsQueryPipe()) queryLeadsDto: QueryLeadsDto) {
         return this.leadsService.findAll(queryLeadsDto);
     }
 

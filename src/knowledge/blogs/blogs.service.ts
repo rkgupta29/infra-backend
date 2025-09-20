@@ -36,68 +36,91 @@ export class BlogsService {
     },
   ) {
     try {
-      // Validate sectors
-      const sectorIds = Array.isArray(createBlogDto.sectorIds)
-        ? createBlogDto.sectorIds
-        : [createBlogDto.sectorIds].filter(Boolean);
+      // Handle sectors if provided
+      let sectorIds: string[] = [];
 
-      if (!sectorIds.length) {
-        throw new BadRequestException('At least one sector ID is required');
+      if (createBlogDto.sectorIds) {
+        sectorIds = Array.isArray(createBlogDto.sectorIds)
+          ? createBlogDto.sectorIds
+          : [createBlogDto.sectorIds].filter(Boolean);
+
+        // Validate sectors if provided
+        if (sectorIds.length > 0) {
+          await this.sectorsService.validateSectorIds(sectorIds);
+        }
       }
 
-      // Validate that all sectors exist
-      await this.sectorsService.validateSectorIds(sectorIds);
+      // Initialize variables for file URLs
+      let coverImageUrl: string | undefined;
+      let docFileUrl: string | undefined;
 
-      // Validate files
-      if (!files.coverImageFile || files.coverImageFile.length === 0) {
-        throw new BadRequestException('Cover image file is required');
+      // Handle cover image file if provided
+      if (files.coverImageFile && files.coverImageFile.length > 0) {
+        const coverImageFile = files.coverImageFile[0];
+        // Generate filename later
       }
 
-      if (!files.docFile || files.docFile.length === 0) {
-        throw new BadRequestException('Document file is required');
+      // Handle document file if provided
+      if (files.docFile && files.docFile.length > 0) {
+        const docFile = files.docFile[0];
+        // Generate filename later
       }
-
-      const coverImageFile = files.coverImageFile[0];
-      const docFile = files.docFile[0];
 
       // Generate unique filenames with timestamp and hash
       const timestamp = Date.now();
       const imageHash = Math.random().toString(36).substring(2, 10);
       const docHash = Math.random().toString(36).substring(2, 10);
-      const sanitizedTitle = createBlogDto.title
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '')
-        .substring(0, 30); // Shorter title to accommodate hash
 
-      // Upload files with unique filenames
-      const coverImageUrl = await this.fileUploadService.uploadImage(
-        coverImageFile,
-        `blog-img-${sanitizedTitle}-${timestamp}-${imageHash}`
-      );
+      // Create a base name for files (use title if available, otherwise timestamp)
+      const baseName = createBlogDto.title
+        ? createBlogDto.title
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          .substring(0, 30) // Shorter title to accommodate hash
+        : `blog-${timestamp}`;
 
-      const docFileUrl = await this.fileUploadService.uploadPdf(
-        docFile,
-        `blog-doc-${sanitizedTitle}-${timestamp}-${docHash}`
-      );
+      // Upload files if provided
+      if (files.coverImageFile && files.coverImageFile.length > 0) {
+        const coverImageFile = files.coverImageFile[0];
+        coverImageUrl = await this.fileUploadService.uploadImage(
+          coverImageFile,
+          `blog-img-${baseName}-${timestamp}-${imageHash}`
+        );
+      }
 
-      // Parse date string to Date object
-      const publishedDate = new Date(createBlogDto.publishedDate);
+      if (files.docFile && files.docFile.length > 0) {
+        const docFile = files.docFile[0];
+        docFileUrl = await this.fileUploadService.uploadPdf(
+          docFile,
+          `blog-doc-${baseName}-${timestamp}-${docHash}`
+        );
+      }
+
+      // Parse date string to Date object if provided, otherwise use current date
+      const publishedDate = createBlogDto.publishedDate
+        ? new Date(createBlogDto.publishedDate)
+        : new Date();
+
+      // Prepare data for creating blog
+      const blogData: any = {
+        publishedDate,
+        active: createBlogDto.active !== undefined ? createBlogDto.active : true,
+        sectorIds,
+      };
+
+      // Add optional fields if provided
+      if (createBlogDto.title) blogData.title = createBlogDto.title;
+      if (createBlogDto.subtitle) blogData.subtitle = createBlogDto.subtitle;
+      if (createBlogDto.authorName) blogData.authorName = createBlogDto.authorName;
+      if (createBlogDto.authorDesignation) blogData.authorDesignation = createBlogDto.authorDesignation;
+      if (createBlogDto.content) blogData.content = createBlogDto.content;
+      if (coverImageUrl) blogData.coverImage = coverImageUrl;
+      if (docFileUrl) blogData.docFile = docFileUrl;
 
       // Create blog with file URLs
       const blog = await (this.prisma as ExtendedPrismaService).blog.create({
-        data: {
-          title: createBlogDto.title,
-          subtitle: createBlogDto.subtitle,
-          authorName: createBlogDto.authorName,
-          authorDesignation: createBlogDto.authorDesignation,
-          publishedDate,
-          coverImage: coverImageUrl,
-          docFile: docFileUrl,
-          content: createBlogDto.content,
-          active: createBlogDto.active !== undefined ? createBlogDto.active : true,
-          sectorIds: sectorIds,
-        },
+        data: blogData,
         include: {
           sectors: true, // Include related sectors
         },

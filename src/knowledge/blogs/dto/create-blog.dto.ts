@@ -5,10 +5,11 @@ export class CreateBlogDto {
   @ApiProperty({
     description: 'The title of the blog',
     example: 'The Future of Sustainable Infrastructure',
+    required: false,
   })
   @IsString()
-  @IsNotEmpty()
-  title: string;
+  @IsOptional()
+  title?: string;
 
   @ApiProperty({
     description: 'The subtitle of the blog',
@@ -22,34 +23,38 @@ export class CreateBlogDto {
   @ApiProperty({
     description: 'The name of the author',
     example: 'John Doe',
+    required: false,
   })
   @IsString()
-  @IsNotEmpty()
-  authorName: string;
+  @IsOptional()
+  authorName?: string;
 
   @ApiProperty({
     description: 'The designation/title of the author',
     example: 'Senior Researcher, Environmental Studies',
+    required: false,
   })
   @IsString()
-  @IsNotEmpty()
-  authorDesignation: string;
+  @IsOptional()
+  authorDesignation?: string;
 
   @ApiProperty({
     description: 'The publication date of the blog',
     example: '2023-05-15',
+    required: false,
   })
   @IsDateString()
-  @IsNotEmpty()
-  publishedDate: string;
+  @IsOptional()
+  publishedDate?: string;
 
   @ApiProperty({
     description: 'The markdown content of the blog',
     example: '# Introduction\n\nThis is a blog post about sustainable infrastructure...',
+    required: false,
   })
   @IsString()
-  @IsNotEmpty()
-  content: string;
+  @IsOptional()
+  content?: string;
 
   @ApiProperty({
     description: 'Whether the blog is active',
@@ -65,9 +70,10 @@ export class CreateBlogDto {
     description: 'Array of sector IDs associated with this blog',
     example: ['60d5ec9d8e8a8d2a5c8e8a8d', '60d5ec9d8e8a8d2a5c8e8a8e'],
     type: [String],
+    required: false,
   })
   @IsArray()
   @IsString({ each: true })
-  @IsNotEmpty()
-  sectorIds: string[];
+  @IsOptional()
+  sectorIds?: string[];
 }

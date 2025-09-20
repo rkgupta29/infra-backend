@@ -55,11 +55,20 @@ export class GalleryService {
       );
 
       // Create gallery item with image URL
+      const galleryData = {
+        ...createGalleryItemDto,
+        image: imageUrl,
+      };
+
+      // Delete undefined fields
+      Object.keys(galleryData).forEach(key => {
+        if (galleryData[key] === undefined) {
+          delete galleryData[key];
+        }
+      });
+
       return this.prisma.galleryItem.create({
-        data: {
-          ...createGalleryItemDto,
-          image: imageUrl,
-        },
+        data: galleryData,
         include: {
           tab: true, // Include related tab
         },
