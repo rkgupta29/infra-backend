@@ -206,8 +206,6 @@ model Blog {
   id              String     @id @default(auto()) @map("_id") @db.ObjectId
   title           String?
   subtitle        String?
-  authorName      String?
-  authorDesignation String?
   publishedDate   DateTime?
   docFile         String?    // URL to the PDF file
   coverImage      String?    // URL to the cover image
@@ -378,14 +376,11 @@ model Association {
 
 model Engagement {
   id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  title       String     // Title of the engagement/event
-  description String     // Description of the engagement/event
-  date        DateTime   // Date of the engagement/event
-  location    String     // Location of the engagement/event
-  tag         String     // Type tag (e.g., "Conference", "Workshop")
-  subtitle    String?    // Optional subtitle or markdown content
-  reportUrl   String?    // Optional URL to a report PDF
-  covers      Json?      // Optional array of cover images with descriptions
+  date        String     // Date of the engagement in YYYY-MM-DD format
+  meetingType String     // Type of meeting (e.g., "Webinar | Workshop | Event | Meeting")
+  description String     // Short summary of the event
+  ctaText     String?    // Call to action text for the main button
+  details     Json       // Detailed information including images, content, and CTA
   active      Boolean    @default(true)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

@@ -23,19 +23,16 @@ export class EngagementsService {
       // Make sure the data structure matches the Prisma schema
       const engagement = await (this.prisma as ExtendedPrismaService).engagement.create({
         data: {
-          title: createEngagementDto.title,
+          date: createEngagementDto.date,
+          meetingType: createEngagementDto.meetingType,
           description: createEngagementDto.description,
-          date: new Date(createEngagementDto.date),
-          location: createEngagementDto.location,
-          tag: createEngagementDto.tag,
-          subtitle: createEngagementDto.subtitle,
-          reportUrl: createEngagementDto.reportUrl,
-          covers: createEngagementDto.covers,
+          ctaText: createEngagementDto.ctaText,
+          details: createEngagementDto.details,
           active: createEngagementDto.active ?? true,
         },
       });
 
-      this.logger.log(`Created new engagement: ${createEngagementDto.title}`);
+      this.logger.log(`Created new engagement for date: ${createEngagementDto.date}`);
       return engagement;
     } catch (error) {
       this.logger.error(`Failed to create engagement: ${error.message}`);
@@ -66,18 +63,21 @@ export class EngagementsService {
 
       // Add year and month filters if provided
       if (year) {
-        const startDate = month
-          ? new Date(`${year}-${month.toString().padStart(2, '0')}-01T00:00:00.000Z`)
-          : new Date(`${year}-01-01T00:00:00.000Z`);
+        const yearStr = year.toString();
 
-        const endDate = month
-          ? new Date(new Date(startDate).setMonth(startDate.getMonth() + 1) - 1) // Last day of the month
-          : new Date(`${year}-12-31T23:59:59.999Z`);
-
-        where.date = {
-          gte: startDate,
-          lte: endDate,
-        };
+        if (month) {
+          // Format month with leading zero if needed
+          const monthStr = month.toString().padStart(2, '0');
+          // Filter by year-month prefix
+          where.date = {
+            startsWith: `${yearStr}-${monthStr}`,
+          };
+        } else {
+          // Filter by year prefix only
+          where.date = {
+            startsWith: yearStr,
+          };
+        }
       }
 
       // Get total count for pagination
@@ -127,9 +127,9 @@ export class EngagementsService {
         orderBy: { date: 'desc' },
       });
 
-      // Extract unique years from dates
+      // Extract unique years from date strings (format: YYYY-MM-DD)
       const years = [...new Set(
-        engagements.map(engagement => new Date(engagement.date).getFullYear())
+        engagements.map(engagement => parseInt(engagement.date.substring(0, 4)))
       )].sort((a: number, b: number) => b - a); // Sort in descending order
 
       return {
@@ -150,14 +150,12 @@ export class EngagementsService {
    */
   async findByYear(year: number) {
     try {
-      const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
-      const endDate = new Date(`${year}-12-31T23:59:59.999Z`);
+      const yearStr = year.toString();
 
       const engagements = await (this.prisma as ExtendedPrismaService).engagement.findMany({
         where: {
           date: {
-            gte: startDate,
-            lte: endDate,
+            startsWith: yearStr,
           },
         },
         orderBy: { date: 'desc' },
@@ -188,14 +186,13 @@ export class EngagementsService {
         throw new Error('Month must be between 1 and 12');
       }
 
-      const startDate = new Date(`${year}-${month.toString().padStart(2, '0')}-01T00:00:00.000Z`);
-      const endDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + 1) - 1); // Last day of the month
+      const yearStr = year.toString();
+      const monthStr = month.toString().padStart(2, '0');
 
       const engagements = await (this.prisma as ExtendedPrismaService).engagement.findMany({
         where: {
           date: {
-            gte: startDate,
-            lte: endDate,
+            startsWith: `${yearStr}-${monthStr}`,
           },
         },
         orderBy: { date: 'asc' },
@@ -251,14 +248,11 @@ export class EngagementsService {
       const data: any = {};
 
       // Only include fields that are present in the DTO
-      if (updateEngagementDto.title !== undefined) data.title = updateEngagementDto.title;
+      if (updateEngagementDto.date !== undefined) data.date = updateEngagementDto.date;
+      if (updateEngagementDto.meetingType !== undefined) data.meetingType = updateEngagementDto.meetingType;
       if (updateEngagementDto.description !== undefined) data.description = updateEngagementDto.description;
-      if (updateEngagementDto.date !== undefined) data.date = new Date(updateEngagementDto.date);
-      if (updateEngagementDto.location !== undefined) data.location = updateEngagementDto.location;
-      if (updateEngagementDto.tag !== undefined) data.tag = updateEngagementDto.tag;
-      if (updateEngagementDto.subtitle !== undefined) data.subtitle = updateEngagementDto.subtitle;
-      if (updateEngagementDto.reportUrl !== undefined) data.reportUrl = updateEngagementDto.reportUrl;
-      if (updateEngagementDto.covers !== undefined) data.covers = updateEngagementDto.covers;
+      if (updateEngagementDto.ctaText !== undefined) data.ctaText = updateEngagementDto.ctaText;
+      if (updateEngagementDto.details !== undefined) data.details = updateEngagementDto.details;
       if (updateEngagementDto.active !== undefined) data.active = updateEngagementDto.active;
 
       const updatedEngagement = await (this.prisma as ExtendedPrismaService).engagement.update({
@@ -303,32 +297,39 @@ export class EngagementsService {
    */
   async getPrimaryEvent() {
     try {
-      const now = new Date();
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
       // Find the closest upcoming event
-      const upcomingEvent = await (this.prisma as ExtendedPrismaService).engagement.findFirst({
+      const upcomingEvents = await (this.prisma as ExtendedPrismaService).engagement.findMany({
         where: {
           date: {
-            gte: now, // Date is greater than or equal to now (upcoming)
+            gte: todayStr, // Date is greater than or equal to today (upcoming)
           },
         },
         orderBy: {
           date: 'asc', // Get the closest upcoming date
         },
+        take: 1,
       });
+
+      const upcomingEvent = upcomingEvents.length > 0 ? upcomingEvents[0] : null;
 
       // If no upcoming event, get the most recent past event
       if (!upcomingEvent) {
-        const recentEvent = await (this.prisma as ExtendedPrismaService).engagement.findFirst({
+        const recentEvents = await (this.prisma as ExtendedPrismaService).engagement.findMany({
           where: {
             date: {
-              lt: now, // Date is less than now (past)
+              lt: todayStr, // Date is less than today (past)
             },
           },
           orderBy: {
             date: 'desc', // Get the most recent past date
           },
+          take: 1,
         });
+
+        const recentEvent = recentEvents.length > 0 ? recentEvents[0] : null;
 
         return {
           event: recentEvent,

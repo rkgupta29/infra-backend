@@ -44,7 +44,7 @@ export class BlogsController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Create a new blog',
-    description: 'Creates a new blog with file uploads. Requires admin privileges.',
+    description: 'Creates a new blog with file uploads. All fields except sectorIds are optional. Requires admin privileges.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -54,51 +54,43 @@ export class BlogsController {
         coverImageFile: {
           type: 'string',
           format: 'binary',
-          description: 'Cover image for the blog',
+          description: 'Cover image for the blog (optional)',
         },
         docFile: {
           type: 'string',
           format: 'binary',
-          description: 'PDF document file for the blog',
+          description: 'PDF document file for the blog (optional)',
         },
         title: {
           type: 'string',
-          description: 'The title of the blog',
+          description: 'The title of the blog (optional)',
         },
         subtitle: {
           type: 'string',
-          description: 'The subtitle of the blog',
-        },
-        authorName: {
-          type: 'string',
-          description: 'The name of the author',
-        },
-        authorDesignation: {
-          type: 'string',
-          description: 'The designation/title of the author',
+          description: 'The subtitle of the blog (optional)',
         },
         publishedDate: {
           type: 'string',
-          description: 'The publication date of the blog (YYYY-MM-DD)',
+          description: 'The publication date of the blog in YYYY-MM-DD format (optional)',
         },
         content: {
           type: 'string',
-          description: 'The markdown content of the blog',
+          description: 'The markdown content of the blog (optional)',
         },
         active: {
           type: 'boolean',
-          description: 'Whether the blog is active',
+          description: 'Whether the blog is active (optional, defaults to true)',
         },
         sectorIds: {
           type: 'array',
           items: {
             type: 'string',
           },
-          description: 'Array of sector IDs associated with this blog',
+          description: 'Array of sector IDs associated with this blog (required)',
         },
       },
       // All fields are optional
-      required: [],
+      required: ['sectorIds'],
     },
   })
   @ApiResponse({
@@ -126,13 +118,11 @@ export class BlogsController {
     const createBlogDto: CreateBlogDto = {
       title: body.title,
       subtitle: body.subtitle,
-      authorName: body.authorName,
-      authorDesignation: body.authorDesignation,
       publishedDate: body.publishedDate,
       content: body.content,
       // Parse active as boolean
       active: body.active === 'true' || body.active === true,
-      // Parse sectorIds as array
+      // Parse sectorIds as array (required field)
       sectorIds: Array.isArray(body.sectorIds)
         ? body.sectorIds
         : body.sectorIds?.includes(',')
@@ -283,7 +273,7 @@ export class BlogsController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update a blog',
-    description: 'Updates a specific blog by its ID. Requires admin privileges.',
+    description: 'Updates a specific blog by its ID. All fields are optional. Requires admin privileges.',
   })
   @ApiParam({
     name: 'id',

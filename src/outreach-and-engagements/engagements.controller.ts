@@ -16,11 +16,14 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBearerAuth
+  ApiBearerAuth,
+  ApiBody
 } from '@nestjs/swagger';
 import { EngagementsService } from './engagements.service';
 import { CreateEngagementDto, UpdateEngagementDto, QueryEngagementsDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Outreach and Engagements')
 @Controller('outreach-and-engagements')
@@ -153,12 +156,14 @@ export class EngagementsController {
    * Create a new engagement
    */
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPERADMIN', 'ADMIN')
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Create a new engagement',
     description: 'Creates a new engagement. Requires authentication.'
   })
+  @ApiBody({ type: CreateEngagementDto })
   @ApiResponse({
     status: 201,
     description: 'Engagement created successfully',
@@ -171,7 +176,8 @@ export class EngagementsController {
    * Update an engagement
    */
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPERADMIN', 'ADMIN')
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Update an engagement',
@@ -181,6 +187,7 @@ export class EngagementsController {
     name: 'id',
     description: 'Engagement ID',
   })
+  @ApiBody({ type: UpdateEngagementDto })
   @ApiResponse({
     status: 200,
     description: 'Engagement updated successfully',
@@ -200,7 +207,8 @@ export class EngagementsController {
    * Delete an engagement
    */
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPERADMIN', 'ADMIN')
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Delete an engagement',

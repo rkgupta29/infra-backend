@@ -239,11 +239,53 @@ export class ResearchPapersController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update a research paper',
-    description: 'Updates a specific research paper by its ID. Requires admin privileges.',
+    description: 'Updates a specific research paper by its ID. Supports file uploads. Requires admin privileges.',
   })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({
     name: 'id',
     description: 'The ID of the research paper to update',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        imageFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'Cover image for the research paper',
+        },
+        pdfFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'PDF file of the research paper',
+        },
+        title: {
+          type: 'string',
+          description: 'The title of the research paper',
+        },
+        description: {
+          type: 'string',
+          description: 'The description of the research paper',
+        },
+        date: {
+          type: 'string',
+          description: 'The publication date of the research paper (YYYY-MM-DD)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the research paper is active',
+        },
+        sectorIds: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+          description: 'Array of sector IDs associated with this research paper',
+        },
+      },
+      required: [],
+    },
   })
   @ApiResponse({
     status: 200,
@@ -253,8 +295,44 @@ export class ResearchPapersController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'Research paper not found.' })
-  update(@Param('id') id: string, @Body() updateResearchPaperDto: UpdateResearchPaperDto) {
-    return this.service.update(id, updateResearchPaperDto);
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'imageFile', maxCount: 1 },
+      { name: 'pdfFile', maxCount: 1 },
+    ])
+  )
+  update(
+    @Param('id') id: string,
+    @Body() body: any,
+    @UploadedFiles()
+    files: {
+      imageFile?: Multer.File[],
+      pdfFile?: Multer.File[],
+    },
+  ) {
+    // Parse form data properly
+    const updateResearchPaperDto: UpdateResearchPaperDto = {};
+
+    // Add fields only if they exist in the request body
+    if (body.title !== undefined) updateResearchPaperDto.title = body.title;
+    if (body.description !== undefined) updateResearchPaperDto.description = body.description;
+    if (body.date !== undefined) updateResearchPaperDto.date = body.date;
+
+    // Parse active as boolean if provided
+    if (body.active !== undefined) {
+      updateResearchPaperDto.active = body.active === 'true' || body.active === true;
+    }
+
+    // Parse sectorIds as array if provided
+    if (body.sectorIds !== undefined) {
+      updateResearchPaperDto.sectorIds = Array.isArray(body.sectorIds)
+        ? body.sectorIds
+        : body.sectorIds?.includes(',')
+          ? body.sectorIds.split(',')
+          : [body.sectorIds];
+    }
+
+    return this.service.update(id, updateResearchPaperDto, files);
   }
 
   @Patch(':id/toggle-status')

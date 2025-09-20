@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum SortOrder {
     ASC = 'asc',
@@ -9,12 +9,12 @@ export enum SortOrder {
 
 export class QueryEngagementsDto {
     @ApiPropertyOptional({
-        description: 'Page number (starts from 1)',
+        description: 'Page number (1-based)',
         default: 1,
-        type: Number,
+        minimum: 1,
     })
     @IsOptional()
-    @Transform(({ value }) => parseInt(value, 10))
+    @Type(() => Number)
     @IsInt()
     @Min(1)
     page?: number = 1;
@@ -22,16 +22,18 @@ export class QueryEngagementsDto {
     @ApiPropertyOptional({
         description: 'Number of items per page',
         default: 10,
-        type: Number,
+        minimum: 1,
+        maximum: 100,
     })
     @IsOptional()
-    @Transform(({ value }) => parseInt(value, 10))
+    @Type(() => Number)
     @IsInt()
     @Min(1)
+    @Max(100)
     limit?: number = 10;
 
     @ApiPropertyOptional({
-        description: 'Field to sort by',
+        description: 'Sort by field',
         default: 'date',
     })
     @IsOptional()
@@ -48,19 +50,22 @@ export class QueryEngagementsDto {
     sortOrder?: SortOrder = SortOrder.DESC;
 
     @ApiPropertyOptional({
-        description: 'Filter by year (e.g., 2025)',
+        description: 'Filter by year (YYYY)',
+        example: 2025,
     })
     @IsOptional()
-    @Transform(({ value }) => parseInt(value, 10))
+    @Type(() => Number)
     @IsInt()
     year?: number;
 
     @ApiPropertyOptional({
         description: 'Filter by month (1-12)',
+        example: 9,
     })
     @IsOptional()
-    @Transform(({ value }) => parseInt(value, 10))
+    @Type(() => Number)
     @IsInt()
     @Min(1)
+    @Max(12)
     month?: number;
 }

@@ -1,0 +1,19 @@
+{
+    "date": "2025-09-19",
+    "meetingType": "Webinar | Workshop | Event | Meeting",
+    "description": "Short summary of the event",
+    "ctaText": "Register Now",
+    "details": {
+        "images": [
+            {
+                "image": "url-to-image.jpg",
+                "description": "Image description or alt text"
+            }
+        ],
+        "content": "Full details about the event (long description, agenda, etc.)",
+        "cta": {
+            "ctaText": "Join Now",
+            "link": "https://example.com"
+        }
+    }
+}

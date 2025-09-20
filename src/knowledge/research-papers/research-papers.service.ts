@@ -201,30 +201,98 @@ export class ResearchPapersService {
    * Update a research paper
    * @param id - The ID of the research paper to modify
    * @param updateResearchPaperDto - The data to update
+   * @param files - Optional uploaded files (image and PDF)
    * @returns The updated research paper
    */
-  async update(id: string, updateResearchPaperDto: UpdateResearchPaperDto) {
-    // Verify research paper exists
-    await this.findOne(id);
-
-    // Validate sectors if provided
-    if (updateResearchPaperDto.sectorIds) {
-      await this.sectorsService.validateSectorIds(updateResearchPaperDto.sectorIds);
+  async update(
+    id: string,
+    updateResearchPaperDto: UpdateResearchPaperDto,
+    files?: {
+      imageFile?: Multer.File[],
+      pdfFile?: Multer.File[],
     }
+  ) {
+    try {
+      // Verify research paper exists
+      const existingPaper = await this.findOne(id);
 
-    // Parse date string to Date object if provided
-    const data: any = { ...updateResearchPaperDto };
-    if (updateResearchPaperDto.date) {
-      data.date = new Date(updateResearchPaperDto.date);
+      // Validate sectors if provided
+      if (updateResearchPaperDto.sectorIds) {
+        await this.sectorsService.validateSectorIds(updateResearchPaperDto.sectorIds);
+      }
+
+      // Prepare update data
+      const data: any = { ...updateResearchPaperDto };
+
+      // Parse date string to Date object if provided
+      if (updateResearchPaperDto.date) {
+        data.date = new Date(updateResearchPaperDto.date);
+      }
+
+      // Handle file uploads if provided
+      if (files) {
+        // Handle image file if provided
+        if (files.imageFile && files.imageFile.length > 0) {
+          const imageFile = files.imageFile[0];
+
+          // Generate unique filename with timestamp and hash
+          const timestamp = Date.now();
+          const imageHash = Math.random().toString(36).substring(2, 10);
+
+          // Use existing title or ID for filename
+          const baseName = existingPaper.title
+            ? existingPaper.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').substring(0, 30)
+            : `research-${id}`;
+
+          // Upload image file
+          const imageUrl = await this.fileUploadService.uploadImage(
+            imageFile,
+            `research-paper-img-${baseName}-${timestamp}-${imageHash}`
+          );
+
+          // Add image URL to update data
+          data.image = imageUrl;
+        }
+
+        // Handle PDF file if provided
+        if (files.pdfFile && files.pdfFile.length > 0) {
+          const pdfFile = files.pdfFile[0];
+
+          // Generate unique filename with timestamp and hash
+          const timestamp = Date.now();
+          const pdfHash = Math.random().toString(36).substring(2, 10);
+
+          // Use existing title or ID for filename
+          const baseName = existingPaper.title
+            ? existingPaper.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').substring(0, 30)
+            : `research-${id}`;
+
+          // Upload PDF file
+          const pdfUrl = await this.fileUploadService.uploadPdf(
+            pdfFile,
+            `research-paper-pdf-${baseName}-${timestamp}-${pdfHash}`
+          );
+
+          // Add PDF URL to update data
+          data.link = pdfUrl;
+        }
+      }
+
+      // Remove image and link fields if they were explicitly set to null in the DTO
+      if (updateResearchPaperDto.image === null) delete data.image;
+      if (updateResearchPaperDto.link === null) delete data.link;
+
+      return (this.prisma as ExtendedPrismaService).researchPaper.update({
+        where: { id },
+        data,
+        include: {
+          sectors: true, // Include related sectors
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to update research paper: ${error.message}`);
+      throw error;
     }
-
-    return (this.prisma as ExtendedPrismaService).researchPaper.update({
-      where: { id },
-      data,
-      include: {
-        sectors: true, // Include related sectors
-      },
-    });
   }
 
   /**

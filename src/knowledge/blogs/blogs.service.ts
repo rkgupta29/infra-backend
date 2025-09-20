@@ -112,8 +112,6 @@ export class BlogsService {
       // Add optional fields if provided
       if (createBlogDto.title) blogData.title = createBlogDto.title;
       if (createBlogDto.subtitle) blogData.subtitle = createBlogDto.subtitle;
-      if (createBlogDto.authorName) blogData.authorName = createBlogDto.authorName;
-      if (createBlogDto.authorDesignation) blogData.authorDesignation = createBlogDto.authorDesignation;
       if (createBlogDto.content) blogData.content = createBlogDto.content;
       if (coverImageUrl) blogData.coverImage = coverImageUrl;
       if (docFileUrl) blogData.docFile = docFileUrl;
@@ -258,10 +256,12 @@ export class BlogsService {
         const timestamp = Date.now();
         const imageHash = Math.random().toString(36).substring(2, 10);
         const sanitizedTitle = blog.title
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, '')
-          .substring(0, 30);
+          ? blog.title
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .substring(0, 30)
+          : `blog-${timestamp}`;
 
         const coverImageUrl = await this.fileUploadService.uploadImage(
           coverImageFile,
@@ -282,10 +282,12 @@ export class BlogsService {
         const timestamp = Date.now();
         const docHash = Math.random().toString(36).substring(2, 10);
         const sanitizedTitle = blog.title
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, '')
-          .substring(0, 30);
+          ? blog.title
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .substring(0, 30)
+          : `blog-${timestamp}`;
 
         const docFileUrl = await this.fileUploadService.uploadPdf(
           docFile,

@@ -20,23 +20,6 @@ export class UpdateBlogDto {
   @IsOptional()
   subtitle?: string;
 
-  @ApiProperty({
-    description: 'The name of the author',
-    example: 'John Doe',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  authorName?: string;
-
-  @ApiProperty({
-    description: 'The designation/title of the author',
-    example: 'Senior Researcher, Environmental Studies',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  authorDesignation?: string;
 
   @ApiProperty({
     description: 'The publication date of the blog',
