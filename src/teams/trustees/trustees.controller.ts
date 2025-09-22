@@ -75,7 +75,7 @@ export class TrusteesController {
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Create a new trustee',
-    description: 'Creates a new trustee. Requires admin authentication.'
+    description: 'Creates a new trustee in the database. Requires admin authentication.'
   })
   @ApiResponse({
     status: 201,
@@ -102,7 +102,7 @@ export class TrusteesController {
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: 'Update a trustee',
-    description: 'Updates an existing trustee by ID. Requires admin authentication.'
+    description: 'Updates an existing trustee in the database by ID. Requires admin authentication.'
   })
   @ApiParam({ name: 'id', description: 'Trustee ID' })
   @ApiResponse({

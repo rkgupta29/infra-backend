@@ -33,12 +33,13 @@ export class QueryMediaCoverageDto {
     limit?: number = 10;
 
     @ApiPropertyOptional({
-        description: 'Sort by field',
-        default: 'publicationYear',
+        description: 'Sort by field (title, date, createdAt, updatedAt)',
+        default: 'date',
+        example: 'date',
     })
     @IsOptional()
     @IsString()
-    sortBy?: string = 'publicationYear';
+    sortBy?: string = 'date';
 
     @ApiPropertyOptional({
         description: 'Sort order',
@@ -57,12 +58,12 @@ export class QueryMediaCoverageDto {
     @IsString()
     search?: string;
 
+
     @ApiPropertyOptional({
-        description: 'Filter by publication year',
-        example: 2023,
+        description: 'If true, returns only active media coverage items',
+        default: true,
     })
     @IsOptional()
-    @Type(() => Number)
-    @IsInt()
-    year?: number;
+    @Type(() => Boolean)
+    activeOnly?: boolean = true;
 }

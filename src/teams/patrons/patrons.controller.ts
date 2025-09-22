@@ -90,7 +90,16 @@ export class PatronsController {
     status: 403,
     description: 'Forbidden',
   })
-  async createPatron(@Body() data: CreatePatronDto) {
+  async createPatron(@Body() body: any) {
+    // Parse form data properly
+    const data: CreatePatronDto = {
+      ...body,
+      // Parse active as boolean if provided
+      active: body.active === undefined ? undefined : body.active === 'true' || body.active === true,
+      // Parse order as number if provided
+      order: body.order !== undefined ? parseInt(body.order, 10) : undefined
+    };
+
     return this.service.createPatron(data);
   }
 
@@ -122,7 +131,29 @@ export class PatronsController {
     status: 404,
     description: 'Patron not found',
   })
-  async updatePatron(@Param('id') id: string, @Body() data: UpdatePatronDto) {
+  async updatePatron(@Param('id') id: string, @Body() body: any) {
+    // Parse form data properly
+    const data: UpdatePatronDto = {};
+
+    // Only add fields that are explicitly provided
+    if (body.image !== undefined) data.image = body.image;
+    if (body.title !== undefined) data.title = body.title;
+    if (body.desig !== undefined) data.desig = body.desig;
+    if (body.popupImg !== undefined) data.popupImg = body.popupImg;
+    if (body.popupdesc !== undefined) data.popupdesc = body.popupdesc;
+    if (body.link !== undefined) data.link = body.link;
+    if (body.socialMedia !== undefined) data.socialMedia = body.socialMedia;
+
+    // Parse order as number if provided
+    if (body.order !== undefined) {
+      data.order = parseInt(body.order, 10);
+    }
+
+    // Parse active as boolean if provided
+    if (body.active !== undefined) {
+      data.active = body.active === 'true' || body.active === true;
+    }
+
     return this.service.updatePatron(id, data);
   }
 

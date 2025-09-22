@@ -30,25 +30,16 @@ export class TrusteesService {
       };
     }
 
-    // For now, use the static trustees data with pagination and filtering
-    const staticTrustees = this.getStaticTrustees();
+    // Get total count for pagination
+    const totalCount = await this.prisma.trustee.count({ where });
 
-    // Apply filtering
-    let filteredTrustees = staticTrustees;
-    if (active !== undefined) {
-      filteredTrustees = filteredTrustees.filter(t => t.active === active);
-    }
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filteredTrustees = filteredTrustees.filter(t =>
-        t.title.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Apply pagination
-    const totalCount = filteredTrustees.length;
-    const trustees = filteredTrustees.slice(skip, skip + limit);
+    // Get trustees with pagination and filtering
+    const trustees = await this.prisma.trustee.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { order: 'asc' },
+    });
 
     return {
       trustees,
@@ -62,54 +53,6 @@ export class TrusteesService {
     };
   }
 
-  /**
-   * Get static trustees data
-   * @returns Array of trustees
-   */
-  private getStaticTrustees() {
-    return [
-      {
-        id: "1",
-        image: "/assets/home/trustees/vinayakImg.png",
-        title: "Vinayak Chatterjee",
-        desig: "Founder & Managing Trustee",
-        popupImg: "/assets/home/trustees/vinayakImg.png",
-        link: "https://x.com/infra_vinayakch?lang=en",
-        socialMedia: "X",
-        popupdesc: `Vinayak Chatterjee co-founded Feedback Infra Pvt Ltd in 1990 and served as its Chairman from 1990 to 2021...`,
-        order: 0,
-        active: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: "2",
-        image: "/assets/home/trustees/Rumjhum.jpg",
-        title: "Rumjhum Chatterjee",
-        desig: "Co-Founder & Managing Trustee",
-        popupImg: "/assets/home/trustees/rumjhumImg.png",
-        link: "https://www.linkedin.com/in/rumjhum-chatterjee-396041268/",
-        socialMedia: "linkedin",
-        popupdesc: `Rumjhum Chatterjee co-founded the Feedback Infra Group...`,
-        order: 1,
-        active: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: "3",
-        image: "/assets/home/trustees/Kiran.jpg",
-        title: "Kiran Karnik",
-        desig: "Trustee, The Infravision Foundation; Former President, NASSCOM; Former MD and CEO, Discovery Networks in India",
-        popupImg: "/assets/home/trustees/kiranImg.png",
-        popupdesc: `Kiran Karnik is a distinguished professional with a career spanning public service and the corporate world...`,
-        order: 2,
-        active: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
-  }
 
   /**
    * Get a trustee by ID
@@ -117,9 +60,9 @@ export class TrusteesService {
    * @returns Trustee data
    */
   async getTrusteeById(id: string) {
-    // For now, use static data
-    const staticTrustees = this.getStaticTrustees();
-    const trustee = staticTrustees.find(t => t.id === id);
+    const trustee = await this.prisma.trustee.findUnique({
+      where: { id }
+    });
 
     if (!trustee) {
       throw new NotFoundException(`Trustee with ID ${id} not found`);
@@ -134,14 +77,17 @@ export class TrusteesService {
    * @returns Created trustee
    */
   async createTrustee(data: CreateTrusteeDto) {
-    // For now, return mock data
-    return {
+    // Set default values if not provided
+    const trusteeData = {
       ...data,
-      id: `mock-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      order: data.order ?? 0,
       active: data.active ?? true
     };
+
+    // Create new trustee in database
+    return this.prisma.trustee.create({
+      data: trusteeData
+    });
   }
 
   /**
@@ -152,14 +98,13 @@ export class TrusteesService {
    */
   async updateTrustee(id: string, data: UpdateTrusteeDto) {
     // Check if trustee exists
-    const trustee = await this.getTrusteeById(id);
+    await this.getTrusteeById(id);
 
-    // For now, return mock updated data
-    return {
-      ...trustee,
-      ...data,
-      updatedAt: new Date()
-    };
+    // Update trustee in database
+    return this.prisma.trustee.update({
+      where: { id },
+      data
+    });
   }
 
   /**
@@ -170,8 +115,11 @@ export class TrusteesService {
     // Check if trustee exists
     await this.getTrusteeById(id);
 
-    // In a real implementation, we would delete from the database
-    // For now, just return success
+    // Delete from database
+    await this.prisma.trustee.delete({
+      where: { id }
+    });
+
     return;
   }
 }

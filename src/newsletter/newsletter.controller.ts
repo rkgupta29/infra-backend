@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   BadRequestException,
   HttpStatus,
   HttpCode,
@@ -19,6 +20,7 @@ import {
   ApiResponse,
   ApiTags,
   ApiParam,
+  ApiQuery,
   ApiBearerAuth,
   ApiConsumes,
   ApiBody,
@@ -26,7 +28,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
 import type { Multer } from 'multer';
 import { NewsletterService } from './newsletter.service';
 import { FileUploadService } from '../common/file-upload/file-upload.service';
@@ -55,9 +57,47 @@ export class NewsletterController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Create a new newsletter',
-    description: 'Creates a new newsletter. This endpoint requires ADMIN or SUPERADMIN authentication.',
+    description: 'Creates a new newsletter with file uploads. This endpoint requires ADMIN or SUPERADMIN authentication.',
   })
-  @ApiBody({ type: CreateNewsletterDto })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        coverImageFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'Cover image for the newsletter',
+        },
+        pdfFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'PDF file of the newsletter',
+        },
+        title: {
+          type: 'string',
+          description: 'The title of the newsletter',
+        },
+        subtitle: {
+          type: 'string',
+          description: 'The subtitle of the newsletter',
+        },
+        version: {
+          type: 'string',
+          description: 'The version of the newsletter (e.g., "Vol. 1, Issue 2")',
+        },
+        publishedDate: {
+          type: 'string',
+          description: 'The publication date of the newsletter (YYYY-MM-DD)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the newsletter is active',
+        },
+      },
+      required: ['title', 'version', 'publishedDate', 'coverImageFile', 'pdfFile'],
+    },
+  })
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Newsletter created successfully',
@@ -68,9 +108,35 @@ export class NewsletterController {
   @ApiForbiddenResponse({
     description: 'Forbidden - Insufficient permissions',
   })
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'coverImageFile', maxCount: 1 },
+      { name: 'pdfFile', maxCount: 1 },
+    ])
+  )
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createNewsletterDto: CreateNewsletterDto) {
-    return this.newsletterService.create(createNewsletterDto);
+  async create(
+    @Body() body: any,
+    @UploadedFiles()
+    files: {
+      coverImageFile?: Multer.File[],
+      pdfFile?: Multer.File[],
+    },
+  ) {
+    // Parse form data properly
+    const createNewsletterDto = {
+      title: body.title,
+      subtitle: body.subtitle,
+      version: body.version,
+      publishedDate: body.publishedDate,
+      // These will be set by the service based on uploaded files
+      coverImage: '',
+      fileUrl: '',
+      // Parse active as boolean if provided
+      active: body.active === 'true' || body.active === true,
+    } as CreateNewsletterDto;
+
+    return this.newsletterService.create(createNewsletterDto, files);
   }
 
   /**
@@ -81,6 +147,13 @@ export class NewsletterController {
   @ApiOperation({
     summary: 'Get all newsletters',
     description: 'Retrieves all newsletters with pagination. This endpoint is public and does not require authentication.',
+  })
+  @ApiQuery({
+    name: 'activeOnly',
+    required: false,
+    description: 'If true, returns only active newsletters; if false, returns all newsletters regardless of active status (default: true)',
+    type: Boolean,
+    example: true,
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -246,14 +319,52 @@ export class NewsletterController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update a newsletter',
-    description: 'Updates a specific newsletter. This endpoint requires ADMIN or SUPERADMIN authentication.',
+    description: 'Updates a specific newsletter with optional file uploads. This endpoint requires ADMIN or SUPERADMIN authentication.',
   })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({
     name: 'id',
     description: 'The ID of the newsletter to update',
     example: '60d21b4667d0d8992e610c85',
   })
-  @ApiBody({ type: UpdateNewsletterDto })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        coverImageFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'Cover image for the newsletter (optional)',
+        },
+        pdfFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'PDF file of the newsletter (optional)',
+        },
+        title: {
+          type: 'string',
+          description: 'The title of the newsletter',
+        },
+        subtitle: {
+          type: 'string',
+          description: 'The subtitle of the newsletter',
+        },
+        version: {
+          type: 'string',
+          description: 'The version of the newsletter (e.g., "Vol. 1, Issue 2")',
+        },
+        publishedDate: {
+          type: 'string',
+          description: 'The publication date of the newsletter (YYYY-MM-DD)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the newsletter is active',
+        },
+      },
+      required: [],
+    },
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Newsletter updated successfully',
@@ -267,11 +378,35 @@ export class NewsletterController {
   @ApiNotFoundResponse({
     description: 'Newsletter not found',
   })
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'coverImageFile', maxCount: 1 },
+      { name: 'pdfFile', maxCount: 1 },
+    ])
+  )
   async update(
     @Param('id') id: string,
-    @Body() updateNewsletterDto: UpdateNewsletterDto,
+    @Body() body: any,
+    @UploadedFiles()
+    files?: {
+      coverImageFile?: Multer.File[],
+      pdfFile?: Multer.File[],
+    },
   ) {
-    return this.newsletterService.update(id, updateNewsletterDto);
+    // Parse form data properly
+    const updateNewsletterDto: UpdateNewsletterDto = {};
+
+    if (body.title !== undefined) updateNewsletterDto.title = body.title;
+    if (body.subtitle !== undefined) updateNewsletterDto.subtitle = body.subtitle;
+    if (body.version !== undefined) updateNewsletterDto.version = body.version;
+    if (body.publishedDate !== undefined) updateNewsletterDto.publishedDate = body.publishedDate;
+
+    // Parse active as boolean if provided
+    if (body.active !== undefined) {
+      updateNewsletterDto.active = body.active === 'true' || body.active === true;
+    }
+
+    return this.newsletterService.update(id, updateNewsletterDto, files && (files.coverImageFile?.length || files.pdfFile?.length) ? files : undefined);
   }
 
   /**

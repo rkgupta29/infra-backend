@@ -188,6 +188,62 @@ export class GalleryService {
   }
 
   /**
+   * Update a gallery item
+   * @param id - The ID of the gallery item to update
+   * @param updateGalleryItemDto - The data to update
+   * @param imageFile - Optional new image file
+   * @returns The updated gallery item
+   */
+  async update(
+    id: string,
+    updateGalleryItemDto: UpdateGalleryItemDto,
+    imageFile?: Multer.File,
+  ) {
+    // Verify gallery item exists
+    const galleryItem = await this.findOne(id);
+
+    try {
+      // Prepare data for update
+      const updateData: any = { ...updateGalleryItemDto };
+
+      // Handle image upload if provided
+      if (imageFile) {
+        // Generate unique filename with timestamp
+        const timestamp = Date.now();
+        const sanitizedEvent = updateGalleryItemDto.event || galleryItem.event;
+        const eventSlug = sanitizedEvent
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          .substring(0, 30);
+
+        // Upload the image with a unique filename
+        const imageUrl = await this.fileUploadService.uploadImage(
+          imageFile,
+          `gallery-${eventSlug}-${timestamp}`
+        );
+
+        // Delete old image if it exists
+        if (galleryItem.image) {
+          await this.fileUploadService.deleteFile(galleryItem.image);
+        }
+
+        // Add image URL to update data
+        updateData.image = imageUrl;
+      }
+
+      // Update the gallery item
+      return this.prisma.galleryItem.update({
+        where: { id },
+        data: updateData,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to update gallery item: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * Delete a gallery item
    * @param id - The ID of the gallery item to delete
    * @returns The deleted gallery item

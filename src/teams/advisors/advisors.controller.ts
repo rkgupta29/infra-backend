@@ -116,16 +116,62 @@ export class AdvisorsController {
   })
   @ApiBody({
     description: 'Advisor data with image upload',
-    type: CreateAdvisorDto,
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Advisor image file (optional)',
+        },
+        popupImage: {
+          type: 'string',
+          format: 'binary',
+          description: 'Advisor popup image file (optional)',
+        },
+        title: {
+          type: 'string',
+          description: 'Advisor name',
+        },
+        desig: {
+          type: 'string',
+          description: 'Advisor designation',
+        },
+        popupdesc: {
+          type: 'string',
+          description: 'Advisor description',
+        },
+        link: {
+          type: 'string',
+          description: 'Social media profile link (optional)',
+        },
+        socialMedia: {
+          type: 'string',
+          description: 'Social media platform (optional)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the advisor is active (optional)',
+        },
+      },
+      required: ['title', 'desig', 'popupdesc'],
+    },
   })
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'image', maxCount: 1 },
     { name: 'popupImage', maxCount: 1 },
   ]))
   async create(
-    @Body() createAdvisorDto: CreateAdvisorDto,
+    @Body() body: any,
     @UploadedFiles() files: { image?: Array<Multer.File>, popupImage?: Array<Multer.File> }
   ) {
+    // Parse form data properly
+    const createAdvisorDto: CreateAdvisorDto = {
+      ...body,
+      // Parse active as boolean if provided
+      active: body.active === undefined ? undefined : body.active === 'true' || body.active === true
+    };
+
     return this.service.create(
       createAdvisorDto,
       files.image?.[0],
@@ -145,15 +191,73 @@ export class AdvisorsController {
     summary: 'Update an advisor',
     description: 'Update an existing advisor with optional image upload'
   })
+  @ApiBody({
+    description: 'Advisor data with optional image upload',
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Advisor image file (optional)',
+        },
+        popupImage: {
+          type: 'string',
+          format: 'binary',
+          description: 'Advisor popup image file (optional)',
+        },
+        title: {
+          type: 'string',
+          description: 'Advisor name (optional)',
+        },
+        desig: {
+          type: 'string',
+          description: 'Advisor designation (optional)',
+        },
+        popupdesc: {
+          type: 'string',
+          description: 'Advisor description (optional)',
+        },
+        link: {
+          type: 'string',
+          description: 'Social media profile link (optional)',
+        },
+        socialMedia: {
+          type: 'string',
+          description: 'Social media platform (optional)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the advisor is active (optional)',
+        },
+      },
+      required: [],
+    },
+  })
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'image', maxCount: 1 },
     { name: 'popupImage', maxCount: 1 },
   ]))
   async update(
     @Param('id') id: string,
-    @Body() updateAdvisorDto: UpdateAdvisorDto,
+    @Body() body: any,
     @UploadedFiles() files: { image?: Array<Multer.File>, popupImage?: Array<Multer.File> }
   ) {
+    // Parse form data properly
+    const updateAdvisorDto: UpdateAdvisorDto = {};
+
+    // Only add fields that are explicitly provided
+    if (body.title !== undefined) updateAdvisorDto.title = body.title;
+    if (body.desig !== undefined) updateAdvisorDto.desig = body.desig;
+    if (body.popupdesc !== undefined) updateAdvisorDto.popupdesc = body.popupdesc;
+    if (body.link !== undefined) updateAdvisorDto.link = body.link;
+    if (body.socialMedia !== undefined) updateAdvisorDto.socialMedia = body.socialMedia;
+
+    // Parse active as boolean if provided
+    if (body.active !== undefined) {
+      updateAdvisorDto.active = body.active === 'true' || body.active === true;
+    }
+
     return this.service.update(
       id,
       updateAdvisorDto,

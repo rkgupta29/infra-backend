@@ -45,8 +45,6 @@ export class FellowService {
           imageFile,
           `fellow-${sanitizedName}-${timestamp}-${randomHash}`
         );
-      } else {
-        throw new BadRequestException('Image file is required');
       }
 
       // Handle popup image upload if provided

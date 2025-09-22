@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateNewsletterDto {
     @ApiProperty({
@@ -49,4 +49,13 @@ export class CreateNewsletterDto {
     @IsNotEmpty({ message: 'File URL is required' })
     @IsString()
     fileUrl: string;
+
+    @ApiPropertyOptional({
+        description: 'Whether the newsletter is active',
+        example: true,
+        default: true,
+    })
+    @IsOptional()
+    @IsBoolean()
+    active?: boolean;
 }

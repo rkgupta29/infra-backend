@@ -206,11 +206,19 @@ export class BlogsService {
    * Update a blog
    * @param id - The ID of the blog to modify
    * @param updateBlogDto - The data to update
+   * @param files - Optional uploaded files (cover image and document)
    * @returns The updated blog
    */
-  async update(id: string, updateBlogDto: UpdateBlogDto) {
+  async update(
+    id: string,
+    updateBlogDto: UpdateBlogDto,
+    files?: {
+      coverImageFile?: Multer.File[],
+      docFile?: Multer.File[],
+    }
+  ) {
     // Verify blog exists
-    await this.findOne(id);
+    const blog = await this.findOne(id);
 
     // Parse date string to Date object if provided
     const data: any = { ...updateBlogDto };
@@ -221,6 +229,61 @@ export class BlogsService {
     // Validate sectors if provided
     if (updateBlogDto.sectorIds && updateBlogDto.sectorIds.length > 0) {
       await this.sectorsService.validateSectorIds(updateBlogDto.sectorIds);
+    }
+
+    // Handle file uploads if provided
+    if (files) {
+      // Update cover image if provided
+      if (files.coverImageFile && files.coverImageFile.length > 0) {
+        const coverImageFile = files.coverImageFile[0];
+        const timestamp = Date.now();
+        const imageHash = Math.random().toString(36).substring(2, 10);
+        const sanitizedTitle = blog.title
+          ? blog.title
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .substring(0, 30)
+          : `blog-${timestamp}`;
+
+        const coverImageUrl = await this.fileUploadService.uploadImage(
+          coverImageFile,
+          `blog-img-${sanitizedTitle}-${timestamp}-${imageHash}`
+        );
+
+        // Delete old image if exists
+        if (blog.coverImage) {
+          await this.fileUploadService.deleteFile(blog.coverImage);
+        }
+
+        data.coverImage = coverImageUrl;
+      }
+
+      // Update doc file if provided
+      if (files.docFile && files.docFile.length > 0) {
+        const docFile = files.docFile[0];
+        const timestamp = Date.now();
+        const docHash = Math.random().toString(36).substring(2, 10);
+        const sanitizedTitle = blog.title
+          ? blog.title
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .substring(0, 30)
+          : `blog-${timestamp}`;
+
+        const docFileUrl = await this.fileUploadService.uploadPdf(
+          docFile,
+          `blog-doc-${sanitizedTitle}-${timestamp}-${docHash}`
+        );
+
+        // Delete old doc if exists
+        if (blog.docFile) {
+          await this.fileUploadService.deleteFile(blog.docFile);
+        }
+
+        data.docFile = docFileUrl;
+      }
     }
 
     return (this.prisma as ExtendedPrismaService).blog.update({

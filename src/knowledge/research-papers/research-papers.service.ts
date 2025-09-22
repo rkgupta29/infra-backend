@@ -218,15 +218,32 @@ export class ResearchPapersService {
 
       // Validate sectors if provided
       if (updateResearchPaperDto.sectorIds) {
-        await this.sectorsService.validateSectorIds(updateResearchPaperDto.sectorIds);
+        // Filter out any empty strings from sectorIds
+        const validSectorIds = updateResearchPaperDto.sectorIds.filter(id => id && id.trim() !== '');
+
+        // Only validate if there are valid sector IDs
+        if (validSectorIds.length > 0) {
+          await this.sectorsService.validateSectorIds(validSectorIds);
+          // Replace the original sectorIds with the filtered list
+          updateResearchPaperDto.sectorIds = validSectorIds;
+        } else {
+          // If all sector IDs were empty/invalid, set to undefined to skip update
+          updateResearchPaperDto.sectorIds = undefined;
+        }
       }
 
-      // Prepare update data
-      const data: any = { ...updateResearchPaperDto };
+      // Prepare update data - only include fields that are explicitly provided
+      const data: any = {};
+
+      // Only add fields that are explicitly provided in the DTO
+      if (updateResearchPaperDto.title !== undefined) data.title = updateResearchPaperDto.title;
+      if (updateResearchPaperDto.description !== undefined) data.description = updateResearchPaperDto.description;
+      if (updateResearchPaperDto.active !== undefined) data.active = updateResearchPaperDto.active;
+      if (updateResearchPaperDto.sectorIds !== undefined) data.sectorIds = updateResearchPaperDto.sectorIds;
 
       // Parse date string to Date object if provided
-      if (updateResearchPaperDto.date) {
-        data.date = new Date(updateResearchPaperDto.date);
+      if (updateResearchPaperDto.date !== undefined) {
+        data.date = updateResearchPaperDto.date ? new Date(updateResearchPaperDto.date) : null;
       }
 
       // Handle file uploads if provided
@@ -278,10 +295,11 @@ export class ResearchPapersService {
         }
       }
 
-      // Remove image and link fields if they were explicitly set to null in the DTO
-      if (updateResearchPaperDto.image === null) delete data.image;
-      if (updateResearchPaperDto.link === null) delete data.link;
+      if (Object.keys(data).length === 0) {
+        return existingPaper;
+      }
 
+      // Update the research paper
       return (this.prisma as ExtendedPrismaService).researchPaper.update({
         where: { id },
         data,

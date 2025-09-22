@@ -273,11 +273,57 @@ export class BlogsController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update a blog',
-    description: 'Updates a specific blog by its ID. All fields are optional. Requires admin privileges.',
+    description: 'Updates a specific blog by its ID. All fields are optional. Supports file uploads. Requires admin privileges.',
   })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({
     name: 'id',
     description: 'The ID of the blog to update',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        coverImageFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'Cover image for the blog (optional)',
+        },
+        docFile: {
+          type: 'string',
+          format: 'binary',
+          description: 'PDF document file for the blog (optional)',
+        },
+        title: {
+          type: 'string',
+          description: 'The title of the blog (optional)',
+        },
+        subtitle: {
+          type: 'string',
+          description: 'The subtitle of the blog (optional)',
+        },
+        publishedDate: {
+          type: 'string',
+          description: 'The publication date of the blog in YYYY-MM-DD format (optional)',
+        },
+        content: {
+          type: 'string',
+          description: 'The markdown content of the blog (optional)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the blog is active (optional, defaults to true)',
+        },
+        sectorIds: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+          description: 'Array of sector IDs associated with this blog (required)',
+        },
+      },
+      required: ['sectorIds'],
+    },
   })
   @ApiResponse({
     status: 200,
@@ -287,8 +333,59 @@ export class BlogsController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'Blog not found.' })
-  update(@Param('id') id: string, @Body() updateBlogDto: UpdateBlogDto) {
-    return this.service.update(id, updateBlogDto);
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'coverImageFile', maxCount: 1 },
+      { name: 'docFile', maxCount: 1 },
+    ])
+  )
+  update(
+    @Param('id') id: string,
+    @Body() body: any,
+    @UploadedFiles()
+    files?: {
+      coverImageFile?: Multer.File[],
+      docFile?: Multer.File[],
+    },
+  ) {
+    // Parse form data properly
+    const updateBlogDto: UpdateBlogDto = {};
+
+    if (body.title !== undefined) updateBlogDto.title = body.title;
+    if (body.subtitle !== undefined) updateBlogDto.subtitle = body.subtitle;
+    if (body.publishedDate !== undefined) updateBlogDto.publishedDate = body.publishedDate;
+    if (body.content !== undefined) updateBlogDto.content = body.content;
+
+    // Parse active as boolean if provided
+    if (body.active !== undefined) {
+      updateBlogDto.active = body.active === 'true' || body.active === true;
+    }
+
+    // Parse sectorIds as array if provided
+    if (body.sectorIds !== undefined) {
+      // Handle different input formats and filter out empty values
+      let sectorIds;
+      if (Array.isArray(body.sectorIds)) {
+        sectorIds = body.sectorIds;
+      } else if (body.sectorIds?.includes(',')) {
+        sectorIds = body.sectorIds.split(',');
+      } else if (body.sectorIds) {
+        sectorIds = [body.sectorIds];
+      } else {
+        sectorIds = [];
+      }
+
+      // Filter out empty strings
+      const filteredSectorIds = sectorIds.filter((id: string) => id && id.trim() !== '');
+
+      // Only include sectorIds in the update if there are valid ones after filtering
+      if (filteredSectorIds.length > 0) {
+        updateBlogDto.sectorIds = filteredSectorIds;
+      }
+      // If all provided sectorIds were empty/invalid, skip updating this field
+    }
+
+    return this.service.update(id, updateBlogDto, files && (files.coverImageFile?.length || files.docFile?.length) ? files : undefined);
   }
 
   @Patch(':id/files')

@@ -325,11 +325,25 @@ export class ResearchPapersController {
 
     // Parse sectorIds as array if provided
     if (body.sectorIds !== undefined) {
-      updateResearchPaperDto.sectorIds = Array.isArray(body.sectorIds)
-        ? body.sectorIds
-        : body.sectorIds?.includes(',')
-          ? body.sectorIds.split(',')
-          : [body.sectorIds];
+      // Handle different input formats and filter out empty values
+      let sectorIds;
+      if (Array.isArray(body.sectorIds)) {
+        sectorIds = body.sectorIds;
+      } else if (body.sectorIds?.includes(',')) {
+        sectorIds = body.sectorIds.split(',');
+      } else if (body.sectorIds) {
+        sectorIds = [body.sectorIds];
+      } else {
+        sectorIds = [];
+      }
+
+      // Filter out empty strings
+      const filteredSectorIds = sectorIds.filter(id => id && id.trim() !== '');
+
+      // If array is empty after filtering, don't include it in the update
+      if (filteredSectorIds.length > 0) {
+        updateResearchPaperDto.sectorIds = filteredSectorIds;
+      }
     }
 
     return this.service.update(id, updateResearchPaperDto, files);

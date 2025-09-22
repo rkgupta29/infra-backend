@@ -42,14 +42,6 @@ export class UpdateMediaCoverageDto {
     @IsString()
     coverImage?: string;
 
-    @ApiPropertyOptional({
-        description: 'Year of publication for filtering',
-        example: 2023,
-    })
-    @IsOptional()
-    @IsInt()
-    @Min(1900)
-    publicationYear?: number;
 
     @ApiPropertyOptional({
         description: 'Whether the media coverage is active',

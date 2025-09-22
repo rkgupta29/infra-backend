@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Query,
@@ -31,6 +32,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Multer } from 'multer';
 import { GalleryService } from './gallery.service';
 import { CreateGalleryItemDto } from './dto/create-gallery-item.dto';
+import { UpdateGalleryItemDto } from './dto/update-gallery-item.dto';
 import { QueryGalleryDto } from './dto/query-gallery.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -325,5 +327,79 @@ export class GalleryController {
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string) {
     return this.service.remove(id);
+  }
+
+  /**
+   * Update a gallery item
+   * This endpoint requires authentication (ADMIN or SUPERADMIN)
+   */
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPERADMIN', 'ADMIN')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Update a gallery item',
+    description: 'Updates a specific gallery item with optional image upload. This endpoint requires ADMIN or SUPERADMIN authentication.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the gallery item to update',
+    example: '60d21b4667d0d8992e610c85',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Image file to upload (optional)',
+        },
+        event: {
+          type: 'string',
+          description: 'Name of the event',
+        },
+        year: {
+          type: 'integer',
+          description: 'Year of the event',
+        },
+        description: {
+          type: 'string',
+          description: 'Description of the image',
+        },
+        tabId: {
+          type: 'string',
+          description: 'ID of the archive tab this gallery item belongs to',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the gallery item is active',
+        },
+      },
+      required: [],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Gallery item updated successfully',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Insufficient permissions',
+  })
+  @ApiNotFoundResponse({
+    description: 'Gallery item not found',
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  @UsePipes(GalleryFormDataPipe)
+  async update(
+    @Param('id') id: string,
+    @Body() updateGalleryItemDto: UpdateGalleryItemDto,
+    @UploadedFile() imageFile?: Multer.File,
+  ) {
+    return this.service.update(id, updateGalleryItemDto, imageFile);
   }
 }

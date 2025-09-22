@@ -16,26 +16,10 @@ export class MediaCoverageService {
    * @returns The created media coverage
    */
   async create(createMediaCoverageDto: CreateMediaCoverageDto) {
-    try {
-      // Create media coverage with provided data
-      const mediaCoverageData = {
-        ...createMediaCoverageDto,
-      };
-
-      // Delete undefined fields
-      Object.keys(mediaCoverageData).forEach(key => {
-        if (mediaCoverageData[key] === undefined) {
-          delete mediaCoverageData[key];
-        }
-      });
-
-      return this.prisma.mediaCoverage.create({
-        data: mediaCoverageData,
-      });
-    } catch (error) {
-      this.logger.error(`Failed to create media coverage: ${error.message}`);
-      throw error;
-    }
+    // Create media coverage with provided data
+    return this.prisma.mediaCoverage.create({
+      data: createMediaCoverageDto,
+    });
   }
 
   /**
@@ -47,31 +31,23 @@ export class MediaCoverageService {
     const {
       page = 1,
       limit = 10,
-      sortBy = 'publicationYear',
+      sortBy = 'date',
       sortOrder = SortOrder.DESC,
       search,
-      year,
+      activeOnly = true,
     } = queryMediaCoverageDto;
 
     const skip = (page - 1) * limit;
 
     // Build the filter object
-    const where: any = {
-      active: true,
-    };
+    const where: any = {};
 
-    // Add search filter if provided (case-insensitive partial match)
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { subtitle: { contains: search, mode: 'insensitive' } },
-        { authorName: { contains: search, mode: 'insensitive' } },
-      ];
-    }
 
-    // Add year filter if provided
-    if (year) {
-      where.publicationYear = year;
+
+
+    // Add active filter if activeOnly is true
+    if (activeOnly) {
+      where.active = true;
     }
 
     // Get total count for pagination
@@ -124,61 +100,58 @@ export class MediaCoverageService {
   }
 
   /**
+   * Update a media coverage
+   * @param id - The ID of the media coverage to update
+   * @param updateMediaCoverageDto - The data to update
+   * @returns The updated media coverage
+   */
+  async update(id: string, updateMediaCoverageDto: UpdateMediaCoverageDto) {
+    // Verify media coverage exists and get current data
+    const existingItem = await this.findOne(id);
+
+    // If active is not provided in the update, keep the existing value
+    const updateData = { ...updateMediaCoverageDto };
+    if (updateData.active === undefined) {
+      updateData.active = existingItem.active;
+    }
+
+    // Update the media coverage record
+    return this.prisma.mediaCoverage.update({
+      where: { id },
+      data: updateData,
+    });
+  }
+
+  /**
    * Delete a media coverage
    * @param id - The ID of the media coverage to delete
    * @returns The deleted media coverage
    */
   async remove(id: string) {
     // Verify media coverage exists
-    const mediaCoverage = await this.findOne(id);
+    await this.findOne(id);
 
-    try {
-      // Delete the media coverage record
-      return this.prisma.mediaCoverage.delete({
-        where: { id },
-      });
-    } catch (error) {
-      this.logger.error(`Failed to delete media coverage: ${error.message}`);
-      throw error;
-    }
-  }
-
-  /**
-   * Get media coverage by publication year
-   * @param year - The year to filter by
-   * @param queryMediaCoverageDto - Query parameters for pagination
-   * @returns Paginated list of media coverage for the specified year
-   */
-  async findByYear(year: number, queryMediaCoverageDto: QueryMediaCoverageDto) {
-    return this.findAll({
-      ...queryMediaCoverageDto,
-      year,
+    // Delete the media coverage record
+    return this.prisma.mediaCoverage.delete({
+      where: { id },
     });
   }
 
-  /**
-   * Get years with media coverage
-   * @returns Array of years in which media coverage exists
-   */
-  async getYears(): Promise<number[]> {
-    const result = await this.prisma.mediaCoverage.groupBy({
-      by: ['publicationYear'],
-      where: { active: true },
-      orderBy: { publicationYear: 'desc' },
-    });
 
-    return result.map(item => item.publicationYear);
-  }
 
   /**
    * Get the most recent media coverage items (last 3)
+   * @param activeOnly - If true, returns only active media coverage items
    * @returns Array of the 3 most recent media coverage items
    */
-  async getRecentMediaCoverage() {
+  async getRecentMediaCoverage(activeOnly: boolean = true) {
     try {
+      // Build where clause based on activeOnly parameter
+      const where = activeOnly ? { active: true } : {};
+
       // Get the 3 most recent media coverage items
       const recentItems = await this.prisma.mediaCoverage.findMany({
-        where: { active: true },
+        where,
         orderBy: { createdAt: 'desc' },
         take: 3,
       });

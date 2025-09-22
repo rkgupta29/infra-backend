@@ -2,12 +2,11 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Query,
   UseGuards,
-  UseInterceptors,
-  UploadedFile,
   Body,
   HttpStatus,
   HttpCode,
@@ -20,15 +19,14 @@ import {
   ApiParam,
   ApiQuery,
   ApiBearerAuth,
-  ApiConsumes,
   ApiBody,
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-// File upload imports removed
 import { MediaCoverageService } from './media-coverage.service';
 import { CreateMediaCoverageDto } from './dto/create-media-coverage.dto';
+import { UpdateMediaCoverageDto } from './dto/update-media-coverage.dto';
 import { QueryMediaCoverageDto } from './dto/query-media-coverage.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -70,18 +68,11 @@ export class MediaCoverageController {
     example: 'infrastructure',
   })
   @ApiQuery({
-    name: 'year',
-    required: false,
-    description: 'Filter by publication year',
-    type: Number,
-    example: 2023,
-  })
-  @ApiQuery({
     name: 'sortBy',
     required: false,
-    description: 'Sort by field (default: publicationYear)',
+    description: 'Sort by field (default: date)',
     type: String,
-    example: 'publicationYear',
+    example: 'date',
   })
   @ApiQuery({
     name: 'sortOrder',
@@ -89,6 +80,13 @@ export class MediaCoverageController {
     description: 'Sort order (default: desc)',
     enum: ['asc', 'desc'],
     example: 'desc',
+  })
+  @ApiQuery({
+    name: 'activeOnly',
+    required: false,
+    description: 'If true, returns only active media coverage; if false, returns all items regardless of active status (default: true)',
+    type: Boolean,
+    example: true,
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -103,7 +101,6 @@ export class MediaCoverageController {
             authorName: 'The Economic Times',
             date: 'July 15, 2023',
             coverImage: '/assets/images/media-coverage/infrastructure-development.jpg',
-            publicationYear: 2023,
             active: true,
             createdAt: '2023-06-10T12:00:00.000Z',
             updatedAt: '2023-06-10T12:00:00.000Z',
@@ -126,26 +123,6 @@ export class MediaCoverageController {
   }
 
   /**
-   * Get years with media coverage
-   * This endpoint is public and does not require authentication
-   */
-  @Get('years')
-  @ApiOperation({
-    summary: 'Get years with media coverage',
-    description: 'Retrieves all years in which media coverage exists. This endpoint is public and does not require authentication.',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Years retrieved successfully',
-    schema: {
-      example: [2023, 2022, 2021],
-    },
-  })
-  async getYears() {
-    return this.service.getYears();
-  }
-
-  /**
    * Get the most recent media coverage items (last 3)
    * This endpoint is public and does not require authentication
    */
@@ -153,6 +130,13 @@ export class MediaCoverageController {
   @ApiOperation({
     summary: 'Get recent media coverage',
     description: 'Retrieves the 3 most recent media coverage items. This endpoint is public and does not require authentication.',
+  })
+  @ApiQuery({
+    name: 'activeOnly',
+    required: false,
+    description: 'If true, returns only active media coverage items; if false, returns all items regardless of active status (default: true)',
+    type: Boolean,
+    example: true,
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -167,7 +151,6 @@ export class MediaCoverageController {
             authorName: 'The Economic Times',
             date: 'July 15, 2023',
             coverImage: '/assets/images/media-coverage/infrastructure-development.jpg',
-            publicationYear: 2023,
             active: true,
             createdAt: '2023-06-10T12:00:00.000Z',
             updatedAt: '2023-06-10T12:00:00.000Z',
@@ -179,7 +162,6 @@ export class MediaCoverageController {
             authorName: 'The Hindu',
             date: 'June 20, 2023',
             coverImage: '/assets/images/media-coverage/urban-planning.jpg',
-            publicationYear: 2023,
             active: true,
             createdAt: '2023-06-05T12:00:00.000Z',
             updatedAt: '2023-06-05T12:00:00.000Z',
@@ -191,7 +173,6 @@ export class MediaCoverageController {
             authorName: 'India Today',
             date: 'May 10, 2023',
             coverImage: '/assets/images/media-coverage/transportation.jpg',
-            publicationYear: 2023,
             active: true,
             createdAt: '2023-05-01T12:00:00.000Z',
             updatedAt: '2023-05-01T12:00:00.000Z',
@@ -202,37 +183,9 @@ export class MediaCoverageController {
       },
     },
   })
-  async getRecentMediaCoverage() {
-    return this.service.getRecentMediaCoverage();
-  }
-
-  /**
-   * Get media coverage by publication year
-   * This endpoint is public and does not require authentication
-   */
-  @Get('years/:year')
-  @ApiOperation({
-    summary: 'Get media coverage by year',
-    description: 'Retrieves media coverage for a specific publication year. This endpoint is public and does not require authentication.',
-  })
-  @ApiParam({
-    name: 'year',
-    description: 'The publication year to filter by',
-    example: '2023',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Media coverage retrieved successfully',
-  })
-  async findByYear(
-    @Param('year') year: string,
-    @Query() queryMediaCoverageDto: QueryMediaCoverageDto,
-  ) {
-    const yearNum = parseInt(year, 10);
-    if (isNaN(yearNum)) {
-      throw new BadRequestException('Year must be a valid number');
-    }
-    return this.service.findByYear(yearNum, queryMediaCoverageDto);
+  async getRecentMediaCoverage(@Query('activeOnly') activeOnly?: string) {
+    const isActiveOnly = activeOnly === undefined ? true : activeOnly.toLowerCase() === 'true';
+    return this.service.getRecentMediaCoverage(isActiveOnly);
   }
 
   /**
@@ -260,7 +213,6 @@ export class MediaCoverageController {
         authorName: 'The Economic Times',
         date: 'July 15, 2023',
         coverImage: '/assets/images/media-coverage/infrastructure-development.jpg',
-        publicationYear: 2023,
         active: true,
         createdAt: '2023-06-10T12:00:00.000Z',
         updatedAt: '2023-06-10T12:00:00.000Z',
@@ -275,7 +227,7 @@ export class MediaCoverageController {
   }
 
   /**
-   * Create a new media coverage with image upload
+   * Create a new media coverage
    * This endpoint requires authentication (ADMIN or SUPERADMIN)
    */
   @Post()
@@ -284,7 +236,7 @@ export class MediaCoverageController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Create a new media coverage',
-    description: 'Creates a new media coverage with image upload. This endpoint requires ADMIN or SUPERADMIN authentication.',
+    description: 'Creates a new media coverage entry in the database. This endpoint requires ADMIN or SUPERADMIN authentication.',
   })
   @ApiBody({
     schema: {
@@ -306,10 +258,6 @@ export class MediaCoverageController {
           type: 'string',
           example: 'July 15, 2023',
         },
-        publicationYear: {
-          type: 'integer',
-          example: 2023,
-        },
         active: {
           type: 'boolean',
           example: true,
@@ -320,7 +268,7 @@ export class MediaCoverageController {
           description: 'URL to the cover image',
         },
       },
-      required: ['title', 'authorName', 'date', 'publicationYear', 'coverImage'],
+      required: ['title', 'authorName', 'date', 'coverImage'],
     },
   })
   @ApiResponse({
@@ -335,11 +283,6 @@ export class MediaCoverageController {
   })
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createMediaCoverageDto: CreateMediaCoverageDto) {
-    // Convert publicationYear from string to number if it's a string
-    if (typeof createMediaCoverageDto.publicationYear === 'string') {
-      createMediaCoverageDto.publicationYear = parseInt(createMediaCoverageDto.publicationYear as any, 10);
-    }
-
     return this.service.create(createMediaCoverageDto);
   }
 
@@ -376,5 +319,44 @@ export class MediaCoverageController {
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string) {
     return this.service.remove(id);
+  }
+
+  /**
+   * Update a media coverage
+   * This endpoint requires authentication (ADMIN or SUPERADMIN)
+   */
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPERADMIN', 'ADMIN')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Update a media coverage',
+    description: 'Updates a specific media coverage entry in the database. This endpoint requires ADMIN or SUPERADMIN authentication.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the media coverage to update',
+    example: '60d21b4667d0d8992e610c85',
+  })
+  @ApiBody({ type: UpdateMediaCoverageDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Media coverage updated successfully',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Insufficient permissions',
+  })
+  @ApiNotFoundResponse({
+    description: 'Media coverage not found',
+  })
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Param('id') id: string,
+    @Body() updateMediaCoverageDto: UpdateMediaCoverageDto,
+  ) {
+    return this.service.update(id, updateMediaCoverageDto);
   }
 }

@@ -116,16 +116,69 @@ export class FellowController {
   })
   @ApiBody({
     description: 'Fellow data with image upload',
-    type: CreateFellowDto,
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Fellow image file (optional)',
+        },
+        popupImage: {
+          type: 'string',
+          format: 'binary',
+          description: 'Fellow popup image file (optional)',
+        },
+        title: {
+          type: 'string',
+          description: 'Fellow name',
+        },
+        desig: {
+          type: 'string',
+          description: 'Fellow designation',
+        },
+        subtitle: {
+          type: 'string',
+          description: 'Fellow subtitle',
+        },
+        popupdesc: {
+          type: 'string',
+          description: 'Fellow description',
+        },
+        link: {
+          type: 'string',
+          description: 'Social media profile link (optional)',
+        },
+        socialMedia: {
+          type: 'string',
+          description: 'Social media platform (optional)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the fellow is active (optional)',
+        },
+      },
+      required: ['title', 'desig', 'subtitle', 'popupdesc'],
+    },
   })
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'image', maxCount: 1 },
     { name: 'popupImage', maxCount: 1 },
   ]))
   async create(
-    @Body() createFellowDto: CreateFellowDto,
+    @Body() body: any,
     @UploadedFiles() files: { image?: Array<Multer.File>, popupImage?: Array<Multer.File> }
   ) {
+    const createFellowDto: CreateFellowDto = {
+      title: body.title,
+      desig: body.desig,
+      subtitle: body.subtitle,
+      popupdesc: body.popupdesc,
+      link: body.link,
+      socialMedia: body.socialMedia,
+      active: body.active === undefined ? undefined : body.active === 'true' || body.active === true,
+    };
+
     return this.service.create(
       createFellowDto,
       files.image?.[0],
@@ -149,11 +202,70 @@ export class FellowController {
     { name: 'image', maxCount: 1 },
     { name: 'popupImage', maxCount: 1 },
   ]))
+  @ApiBody({
+    description: 'Fellow data with optional image upload',
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Fellow image file (optional)',
+        },
+        popupImage: {
+          type: 'string',
+          format: 'binary',
+          description: 'Fellow popup image file (optional)',
+        },
+        title: {
+          type: 'string',
+          description: 'Fellow name (optional)',
+        },
+        desig: {
+          type: 'string',
+          description: 'Fellow designation (optional)',
+        },
+        subtitle: {
+          type: 'string',
+          description: 'Fellow subtitle (optional)',
+        },
+        popupdesc: {
+          type: 'string',
+          description: 'Fellow description (optional)',
+        },
+        link: {
+          type: 'string',
+          description: 'Social media profile link (optional)',
+        },
+        socialMedia: {
+          type: 'string',
+          description: 'Social media platform (optional)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the fellow is active (optional)',
+        },
+      },
+      required: [],
+    },
+  })
   async update(
     @Param('id') id: string,
-    @Body() updateFellowDto: UpdateFellowDto,
+    @Body() body: any,
     @UploadedFiles() files: { image?: Array<Multer.File>, popupImage?: Array<Multer.File> }
   ) {
+    const updateFellowDto: UpdateFellowDto = {};
+
+    if (body.title !== undefined) updateFellowDto.title = body.title;
+    if (body.desig !== undefined) updateFellowDto.desig = body.desig;
+    if (body.subtitle !== undefined) updateFellowDto.subtitle = body.subtitle;
+    if (body.popupdesc !== undefined) updateFellowDto.popupdesc = body.popupdesc;
+    if (body.link !== undefined) updateFellowDto.link = body.link;
+    if (body.socialMedia !== undefined) updateFellowDto.socialMedia = body.socialMedia;
+    if (body.active !== undefined) {
+      updateFellowDto.active = body.active === 'true' || body.active === true;
+    }
+
     return this.service.update(
       id,
       updateFellowDto,

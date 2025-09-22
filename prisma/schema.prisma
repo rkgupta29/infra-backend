@@ -270,7 +270,6 @@ model MediaCoverage {
   authorName      String     // Name of the author or publication
   date            String     // Date of publication (as string for flexibility)
   coverImage      String     // URL to the cover image
-  publicationYear Int        // Year of publication for filtering
   active          Boolean    @default(true)
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt

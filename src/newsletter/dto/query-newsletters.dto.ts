@@ -64,4 +64,12 @@ export class QueryNewslettersDto {
     @IsOptional()
     @IsString()
     year?: string;
+
+    @ApiPropertyOptional({
+        description: 'If true, returns only active newsletters; if false, returns all newsletters regardless of active status',
+        default: true,
+    })
+    @IsOptional()
+    @Type(() => Boolean)
+    activeOnly?: boolean = true;
 }

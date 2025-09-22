@@ -11,7 +11,7 @@ interface ExtendedPrismaService extends PrismaService {
 
 @Injectable()
 export class SectorsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Create a new sector
@@ -207,24 +207,35 @@ export class SectorsService {
    * @returns true if all sectors exist, throws error otherwise
    */
   async validateSectorIds(sectorIds: string[]) {
-    if (!sectorIds || sectorIds.length === 0) {
-      throw new BadRequestException('At least one sector ID must be provided');
+    // Filter out any empty or invalid values
+    const validSectorIds = sectorIds.filter(id => id && typeof id === 'string' && id.trim() !== '');
+
+    if (validSectorIds.length === 0) {
+      throw new BadRequestException('At least one valid sector ID must be provided');
     }
 
-    const sectors = await (this.prisma as ExtendedPrismaService).sector.findMany({
-      where: {
-        id: {
-          in: sectorIds,
+    try {
+      const sectors = await (this.prisma as ExtendedPrismaService).sector.findMany({
+        where: {
+          id: {
+            in: validSectorIds,
+          },
         },
-      },
-    });
+      });
 
-    if (sectors.length !== sectorIds.length) {
-      const foundIds = sectors.map(sect => sect.id);
-      const invalidIds = sectorIds.filter(id => !foundIds.includes(id));
-      throw new BadRequestException(`Invalid sector IDs: ${invalidIds.join(', ')}`);
+      if (sectors.length !== validSectorIds.length) {
+        const foundIds = sectors.map(sect => sect.id);
+        const invalidIds = validSectorIds.filter(id => !foundIds.includes(id));
+        throw new BadRequestException(`Invalid sector IDs: ${invalidIds.join(', ')}`);
+      }
+
+      return true;
+    } catch (error) {
+      // If this is a Prisma error related to invalid ObjectId format
+      if (error.code === 'P2023') {
+        throw new BadRequestException('One or more sector IDs have invalid format');
+      }
+      throw error;
     }
-
-    return true;
   }
 }

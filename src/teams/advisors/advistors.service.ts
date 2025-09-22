@@ -30,6 +30,7 @@ export class AdvisorsService {
         try {
             let imageUrl = '';
             let popupImgUrl = '';
+            let isActive = createAdvisorDto.active !== undefined ? createAdvisorDto.active : true;
 
             // Handle image upload if provided
             if (imageFile) {
@@ -45,8 +46,6 @@ export class AdvisorsService {
                     imageFile,
                     `advisor-${sanitizedName}-${timestamp}-${randomHash}`
                 );
-            } else {
-                throw new BadRequestException('Image file is required');
             }
 
             // Handle popup image upload if provided
@@ -75,7 +74,7 @@ export class AdvisorsService {
                     link: createAdvisorDto.link,
                     socialMedia: createAdvisorDto.socialMedia,
                     popupImg: popupImgUrl || null,
-                    active: createAdvisorDto.active !== undefined ? createAdvisorDto.active : true,
+                    active: isActive,
                 },
             });
 
