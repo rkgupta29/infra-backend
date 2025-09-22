@@ -2,13 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsArray, IsUrl, IsDateString, ArrayMinSize } from 'class-validator';
 
 export class CreateVideoDto {
-  @ApiProperty({
-    description: 'Image URL or path for the video thumbnail',
+  @ApiPropertyOptional({
+    description: 'Image URL or path for the video thumbnail (optional, can be uploaded via file)',
     example: '/assets/archive/video/example.jpg',
   })
   @IsString()
-  @IsNotEmpty()
-  image: string;
+  @IsOptional()
+  image?: string;
 
   @ApiProperty({
     description: 'Title of the video',

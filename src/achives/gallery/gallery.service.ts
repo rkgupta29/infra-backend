@@ -203,8 +203,38 @@ export class GalleryService {
     const galleryItem = await this.findOne(id);
 
     try {
-      // Prepare data for update
-      const updateData: any = { ...updateGalleryItemDto };
+      // Prepare data for update - explicitly map only valid fields
+      const updateData: any = {};
+
+      // Only include defined fields from the DTO
+      if (updateGalleryItemDto.event !== undefined) {
+        updateData.event = updateGalleryItemDto.event;
+      }
+
+      if (updateGalleryItemDto.year !== undefined) {
+        updateData.year = updateGalleryItemDto.year;
+      }
+
+      if (updateGalleryItemDto.description !== undefined) {
+        updateData.description = updateGalleryItemDto.description;
+      }
+
+      if (updateGalleryItemDto.tabId !== undefined) {
+        // Validate that the tab exists before updating
+        const tab = await this.prisma.archiveTab.findUnique({
+          where: { id: updateGalleryItemDto.tabId },
+        });
+
+        if (!tab) {
+          throw new NotFoundException(`Archive tab with ID '${updateGalleryItemDto.tabId}' not found`);
+        }
+
+        updateData.tabId = updateGalleryItemDto.tabId;
+      }
+
+      if (updateGalleryItemDto.active !== undefined) {
+        updateData.active = updateGalleryItemDto.active;
+      }
 
       // Handle image upload if provided
       if (imageFile) {
@@ -233,10 +263,20 @@ export class GalleryService {
       }
 
       // Update the gallery item
-      return this.prisma.galleryItem.update({
+      const updatedItem = await this.prisma.galleryItem.update({
         where: { id },
         data: updateData,
       });
+
+      // Fetch the complete item with tab relation separately to handle null tabs
+      const completeItem = await this.prisma.galleryItem.findUnique({
+        where: { id },
+        include: {
+          tab: true,
+        },
+      });
+
+      return completeItem;
     } catch (error) {
       this.logger.error(`Failed to update gallery item: ${error.message}`);
       throw error;

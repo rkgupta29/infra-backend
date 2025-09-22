@@ -14,6 +14,7 @@ import {
   HttpCode,
   BadRequestException,
   UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -37,14 +38,19 @@ import { QueryGalleryDto } from './dto/query-gallery.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { GalleryFormDataPipe } from './pipes/gallery-form-data.pipe';
-import { GalleryFormDataInterceptor } from './interceptors/gallery-form-data.interceptor';
-
 @ApiTags('Archives - Gallery')
 @Controller('archives/gallery')
-@UseInterceptors(GalleryFormDataInterceptor)
 export class GalleryController {
   constructor(private readonly service: GalleryService) { }
+
+  /**
+   * Helper method to check if a value is meaningful (not empty string, null, or undefined)
+   * @param value - The value to check
+   * @returns true if the value should be used for update
+   */
+  private hasMeaningfulValue(value: any): boolean {
+    return value !== undefined && value !== null && value !== '';
+  }
 
   /**
    * Get all gallery items with pagination and filtering
@@ -246,8 +252,9 @@ export class GalleryController {
           example: 'Annual Conference 2023',
         },
         year: {
-          type: 'integer',
-          example: 2023,
+          type: 'string',
+          description: 'Year of the event (will be parsed as integer)',
+          example: '2023',
         },
         description: {
           type: 'string',
@@ -258,8 +265,9 @@ export class GalleryController {
           example: '60d21b4667d0d8992e610c86',
         },
         active: {
-          type: 'boolean',
-          example: true,
+          type: 'string',
+          description: 'Whether the item is active (will be parsed as boolean)',
+          example: 'true',
         },
         file: {
           type: 'string',
@@ -281,17 +289,34 @@ export class GalleryController {
     description: 'Forbidden - Insufficient permissions',
   })
   @UseInterceptors(FileInterceptor('file'))
-  @UsePipes(new GalleryFormDataPipe())
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body() createGalleryItemDto: CreateGalleryItemDto,
+    @Body() body: any,
     @UploadedFile() file: Multer.File,
   ) {
-    if (!file) {
-      throw new BadRequestException('Image file is required');
-    }
+    try {
+      if (!file) {
+        throw new BadRequestException('Image file is required');
+      }
 
-    return this.service.create(createGalleryItemDto, file);
+      // Parse form data properly
+      const createGalleryItemDto: CreateGalleryItemDto = {
+        event: body.event,
+        year: parseInt(body.year, 10),
+        description: body.description,
+        tabId: body.tabId,
+        active: body.active === undefined ? true : body.active === 'true' || body.active === true,
+      };
+
+      // Validate year
+      if (isNaN(createGalleryItemDto.year)) {
+        throw new BadRequestException('Year must be a valid number');
+      }
+
+      return this.service.create(createGalleryItemDto, file);
+    } catch (error) {
+      throw new BadRequestException(`Failed to create gallery item: ${error.message}`);
+    }
   }
 
   /**
@@ -339,7 +364,7 @@ export class GalleryController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update a gallery item',
-    description: 'Updates a specific gallery item with optional image upload. This endpoint requires ADMIN or SUPERADMIN authentication.',
+    description: 'Partially updates a gallery item with optional image upload. Only provided fields will be updated. Empty values are ignored. This endpoint requires ADMIN or SUPERADMIN authentication.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiParam({
@@ -348,6 +373,7 @@ export class GalleryController {
     example: '60d21b4667d0d8992e610c85',
   })
   @ApiBody({
+    description: 'Gallery item data with optional image upload. Only provide fields you want to update. Empty values will be ignored.',
     schema: {
       type: 'object',
       properties: {
@@ -358,23 +384,25 @@ export class GalleryController {
         },
         event: {
           type: 'string',
-          description: 'Name of the event',
+          description: 'Name of the event (optional - leave empty to not update)',
         },
         year: {
-          type: 'integer',
-          description: 'Year of the event',
+          type: 'string',
+          description: 'Year of the event (optional - leave empty to not update)',
+          example: '2023',
         },
         description: {
           type: 'string',
-          description: 'Description of the image',
+          description: 'Description of the image (optional - leave empty to not update)',
         },
         tabId: {
           type: 'string',
-          description: 'ID of the archive tab this gallery item belongs to',
+          description: 'ID of the archive tab (optional - leave empty to not update)',
         },
         active: {
-          type: 'boolean',
-          description: 'Whether the gallery item is active',
+          type: 'string',
+          description: 'Whether the gallery item is active (optional - leave empty to not update)',
+          example: 'true',
         },
       },
       required: [],
@@ -394,12 +422,49 @@ export class GalleryController {
     description: 'Gallery item not found',
   })
   @UseInterceptors(FileInterceptor('file'))
-  @UsePipes(GalleryFormDataPipe)
   async update(
     @Param('id') id: string,
-    @Body() updateGalleryItemDto: UpdateGalleryItemDto,
+    @Body() body: any,
     @UploadedFile() imageFile?: Multer.File,
   ) {
-    return this.service.update(id, updateGalleryItemDto, imageFile);
+    try {
+      // Parse form data properly - only include meaningful values
+      const updateGalleryItemDto: UpdateGalleryItemDto = {};
+
+      // Only add fields that have meaningful values (not empty strings or "string")
+      if (this.hasMeaningfulValue(body.event) && body.event !== 'string') {
+        updateGalleryItemDto.event = body.event;
+      }
+
+      if (this.hasMeaningfulValue(body.year) && body.year !== 'string') {
+        const year = parseInt(body.year, 10);
+        if (isNaN(year)) {
+          throw new BadRequestException('Year must be a valid number');
+        }
+        updateGalleryItemDto.year = year;
+      }
+
+      if (this.hasMeaningfulValue(body.description) && body.description !== 'string') {
+        updateGalleryItemDto.description = body.description;
+      }
+
+      if (this.hasMeaningfulValue(body.tabId) && body.tabId !== 'string') {
+        // Validate that tabId is a valid ObjectId format (24 hex characters)
+        const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+        if (!objectIdRegex.test(body.tabId)) {
+          throw new BadRequestException('tabId must be a valid MongoDB ObjectId');
+        }
+        updateGalleryItemDto.tabId = body.tabId;
+      }
+
+      // Parse active as boolean if provided and not empty
+      if (this.hasMeaningfulValue(body.active) && body.active !== 'string') {
+        updateGalleryItemDto.active = body.active === 'true' || body.active === true;
+      }
+
+      return this.service.update(id, updateGalleryItemDto, imageFile);
+    } catch (error) {
+      throw new BadRequestException(`Failed to update gallery item: ${error.message}`);
+    }
   }
 }
