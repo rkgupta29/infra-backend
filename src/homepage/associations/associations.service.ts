@@ -152,16 +152,61 @@ export class AssociationsService {
      * Update an association
      * @param id - The ID of the association to update
      * @param updateAssociationDto - The data to update
+     * @param imageFile - Optional new image file to upload
      * @returns The updated association
      */
-    async update(id: string, updateAssociationDto: UpdateAssociationDto) {
-        // Verify association exists
-        await this.findOne(id);
+    async update(id: string, updateAssociationDto: UpdateAssociationDto, imageFile?: Multer.File) {
+        // Verify association exists and get current data
+        const existingAssociation = await this.findOne(id);
 
-        return (this.prisma as ExtendedPrismaService).association.update({
-            where: { id },
-            data: updateAssociationDto,
-        });
+        try {
+            const updateData: any = { ...updateAssociationDto };
+
+            // Handle image upload if provided
+            if (imageFile) {
+                // Generate unique filename with timestamp
+                const timestamp = Date.now();
+                const randomHash = Math.random().toString(36).substring(2, 10);
+                const sanitizedTitle = updateAssociationDto.title || existingAssociation.title;
+                const formattedTitle = sanitizedTitle
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^a-z0-9-]/g, '')
+                    .substring(0, 30);
+
+                // Upload new image
+                const imageUrl = await this.fileUploadService.uploadImage(
+                    imageFile,
+                    `association-${formattedTitle}-${timestamp}-${randomHash}`
+                );
+
+                // Delete old image if exists and is in our assets
+                if (existingAssociation.imageUrl && existingAssociation.imageUrl.startsWith('/assets/')) {
+                    await this.fileUploadService.deleteFile(
+                        existingAssociation.imageUrl.replace('/assets/', '')
+                    );
+                }
+
+                // Add new image URL to update data
+                updateData.imageUrl = imageUrl;
+            }
+
+            // Preserve existing values for fields not provided in the update
+            if (updateData.active === undefined) {
+                updateData.active = existingAssociation.active;
+            }
+            if (updateData.order === undefined) {
+                updateData.order = existingAssociation.order;
+            }
+
+            return (this.prisma as ExtendedPrismaService).association.update({
+                where: { id },
+                data: updateData,
+            });
+        } catch (error) {
+            this.logger.error(`Failed to update association: ${error.message}`);
+            throw error;
+        }
     }
 
     /**

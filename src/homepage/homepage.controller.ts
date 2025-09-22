@@ -29,8 +29,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 // Remove UserRole import if not available f  rom @prisma/client
 import { UpdateSectionDto } from './dto/update-section.dto';
 
-@ApiTags('Homepage Content Management')
-@Controller('/content')//home
+@ApiTags('Content Management for entire website')
+@Controller('/content')
 export class HomepageController {
 
   constructor(private readonly service: HomepageService) { }

@@ -3,45 +3,46 @@ import { IsNotEmpty, IsString, IsOptional, IsInt, Min, IsBoolean } from 'class-v
 
 export class CreateMediaCoverageDto {
     @ApiProperty({
+        description: 'Category of the media coverage',
+        example: 'News',
+    })
+    @IsNotEmpty({ message: 'Category is required' })
+    @IsString()
+    category: string;
+
+    @ApiPropertyOptional({
         description: 'Title of the media coverage',
         example: 'Infrastructure Development in Rural Areas',
     })
-    @IsNotEmpty({ message: 'Title is required' })
-    @IsString()
-    title: string;
-
-    @ApiPropertyOptional({
-        description: 'Subtitle of the media coverage',
-        example: 'A comprehensive analysis of recent initiatives',
-    })
     @IsOptional()
     @IsString()
-    subtitle?: string;
+    title?: string;
 
     @ApiProperty({
-        description: 'Name of the author or publication',
-        example: 'The Economic Times',
-    })
-    @IsNotEmpty({ message: 'Author name is required' })
-    @IsString()
-    authorName: string;
-
-    @ApiProperty({
-        description: 'Date of publication',
-        example: 'July 15, 2023',
+        description: 'Date of publication in yyyy/mm/dd format',
+        example: '2023/07/15',
     })
     @IsNotEmpty({ message: 'Date is required' })
     @IsString()
     date: string;
 
     @ApiProperty({
-        description: 'URL to the cover image',
-        example: '/assets/images/media-coverage/infrastructure-development.jpg',
+        description: 'Description of the media coverage',
+        example: 'A comprehensive analysis of recent initiatives',
     })
-    @IsNotEmpty({ message: 'Cover image URL is required' })
+    @IsNotEmpty({ message: 'Description is required' })
     @IsString()
-    coverImage: string;
+    description: string;
 
+    @ApiProperty({
+        description: 'Link to the media coverage',
+        example: 'https://example.com/article',
+    })
+    @IsNotEmpty({ message: 'Link is required' })
+    @IsString()
+    link: string;
+
+    // image will be set automatically by the service after file upload
 
     @ApiPropertyOptional({
         description: 'Whether the media coverage is active',

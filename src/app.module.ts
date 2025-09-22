@@ -12,7 +12,6 @@ import { HomepageModule } from './homepage/homepage.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { NewsletterSubscriptionModule } from './newsletter_subscription/newsletter_subscription.module';
-import { AssociationsModule } from './associations/associations.module';
 import { MediaCoverageModule } from './media-coverage/media-coverage.module';
 import { NewsletterModule } from './newsletter/newsletter.module';
 import { TrusteesModule } from './teams/trustees/trustees.module';
@@ -30,7 +29,7 @@ import { FileUploadModule } from './common/file-upload/file-upload.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,      
+      isGlobal: true,
     }),
     PrismaModule,
     AuthModule,
@@ -39,13 +38,12 @@ import { FileUploadModule } from './common/file-upload/file-upload.module';
     OrganisationModule,
     HomepageModule,
     NewsletterSubscriptionModule,
-    AssociationsModule,
     MediaCoverageModule,
     NewsletterModule,
     AdvisorsModule,
     TeamModule,
     FellowModule,
-      ServeStaticModule.forRoot({
+    ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client/dist'),
       serveRoot: '/admin',
       exclude: ['/api*', '/docs*'],
@@ -60,7 +58,7 @@ import { FileUploadModule } from './common/file-upload/file-upload.module';
       exclude: ['/api*', '/docs*', '/admin*'],
     }),
     TrusteesModule,
-    EngagementsModule ,
+    EngagementsModule,
     PatronsModule,
     GalleryModule,
     VideosModule,
@@ -71,4 +69,4 @@ import { FileUploadModule } from './common/file-upload/file-upload.module';
   controllers: [AppController],
   providers: [AppService, SeederService],
 })
-export class AppModule {}
+export class AppModule { }

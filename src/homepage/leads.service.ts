@@ -1,21 +1,65 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { FileUploadService } from '../common/file-upload/file-upload.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { QueryLeadsDto, SortOrder } from './dto/query-leads.dto';
+import type { Multer } from 'multer';
 
 @Injectable()
 export class LeadsService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly fileUploadService: FileUploadService,
+    ) { }
 
     /**
      * Create a new contact form submission
      * @param createLeadDto - The data for the new submission
+     * @param file - Optional file to upload
      * @returns The created submission
      */
-    async create(createLeadDto: CreateLeadDto) {
-        return this.prisma.contactFormSubmission.create({
-            data: createLeadDto,
-        });
+    async create(createLeadDto: CreateLeadDto, file?: Multer.File) {
+        try {
+            let fileUrl: string | undefined;
+
+            // Handle file upload if provided
+            if (file) {
+                // Check if it's a PDF or an image
+                const isPdf = file.mimetype === 'application/pdf';
+                const isImage = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype);
+
+                if (!isPdf && !isImage) {
+                    throw new BadRequestException('Invalid file type. Only PDF or image files (JPEG, PNG, GIF, WebP) are allowed.');
+                }
+
+                // Generate unique filename
+                const timestamp = Date.now();
+                const randomHash = Math.random().toString(36).substring(2, 10);
+                const sanitizedName = `${createLeadDto.firstName}-${createLeadDto.lastName}`
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^a-z0-9-]/g, '')
+                    .substring(0, 30);
+
+                if (isPdf) {
+                    fileUrl = await this.fileUploadService.uploadPdf(file, `contact-${sanitizedName}-${timestamp}-${randomHash}`);
+                } else {
+                    fileUrl = await this.fileUploadService.uploadImage(file, `contact-${sanitizedName}-${timestamp}-${randomHash}`);
+                }
+            }
+
+            // Create the submission with file URL if uploaded
+            const data = {
+                ...createLeadDto,
+                fileUrl,
+            };
+
+            return this.prisma.contactFormSubmission.create({
+                data,
+            });
+        } catch (error) {
+            throw error;
+        }
     }
 
     /**
@@ -63,7 +107,6 @@ export class LeadsService {
         if (isRead !== undefined) {
             where.isRead = isRead;
         }
-
         // Get total count for pagination
         const total = await this.prisma.contactFormSubmission.count({ where });
 

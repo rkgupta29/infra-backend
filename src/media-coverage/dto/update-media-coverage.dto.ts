@@ -3,6 +3,14 @@ import { IsString, IsInt, Min, IsBoolean, IsOptional } from 'class-validator';
 
 export class UpdateMediaCoverageDto {
     @ApiPropertyOptional({
+        description: 'Category of the media coverage',
+        example: 'News',
+    })
+    @IsOptional()
+    @IsString()
+    category?: string;
+
+    @ApiPropertyOptional({
         description: 'Title of the media coverage',
         example: 'Infrastructure Development in Rural Areas',
     })
@@ -11,37 +19,30 @@ export class UpdateMediaCoverageDto {
     title?: string;
 
     @ApiPropertyOptional({
-        description: 'Subtitle of the media coverage',
-        example: 'A comprehensive analysis of recent initiatives',
-    })
-    @IsOptional()
-    @IsString()
-    subtitle?: string;
-
-    @ApiPropertyOptional({
-        description: 'Name of the author or publication',
-        example: 'The Economic Times',
-    })
-    @IsOptional()
-    @IsString()
-    authorName?: string;
-
-    @ApiPropertyOptional({
-        description: 'Date of publication',
-        example: 'July 15, 2023',
+        description: 'Date of publication in yyyy/mm/dd format',
+        example: '2023/07/15',
     })
     @IsOptional()
     @IsString()
     date?: string;
 
     @ApiPropertyOptional({
-        description: 'URL to the cover image',
-        example: '/assets/images/media-coverage/infrastructure-development.jpg',
+        description: 'Description of the media coverage',
+        example: 'A comprehensive analysis of recent initiatives',
     })
     @IsOptional()
     @IsString()
-    coverImage?: string;
+    description?: string;
 
+    @ApiPropertyOptional({
+        description: 'Link to the media coverage',
+        example: 'https://example.com/article',
+    })
+    @IsOptional()
+    @IsString()
+    link?: string;
+
+    // image will be set automatically by the service after file upload
 
     @ApiPropertyOptional({
         description: 'Whether the media coverage is active',

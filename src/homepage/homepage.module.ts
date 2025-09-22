@@ -22,7 +22,6 @@ import { AssociationsModule } from './associations/associations.module';
     HomepageController,
     LatestUpdatesController,
     AdvocacyController,
-    ContactController,
     LeadsController
   ],
   providers: [

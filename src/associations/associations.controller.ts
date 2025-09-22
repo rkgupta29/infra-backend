@@ -1,26 +1,26 @@
 import { Controller, Get } from '@nestjs/common';
-import { 
-  ApiOperation, 
-  ApiResponse, 
-  ApiTags 
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags
 } from '@nestjs/swagger';
 import { AssociationsService } from './associations.service';
 
-@ApiTags('Associations')
+@ApiTags('sdafdfs')
 @Controller('associations')
 export class AssociationsController {
-  constructor(private readonly service: AssociationsService) {}
+  constructor(private readonly service: AssociationsService) { }
 
   /**
    * Get associations data: clientele
    */
   @Get()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get associations data',
     description: 'Retrieves random association data. This endpoint is public and does not require authentication.'
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Associations data retrieved successfully',
     schema: {
       example: {
@@ -28,7 +28,7 @@ export class AssociationsController {
           {
             id: 1,
             name: 'Infrastructure Development Association',
-           logoUrl: 'https://www.infrastructure.com/logo.png',
+            logoUrl: 'https://www.infrastructure.com/logo.png',
           },
           {
             id: 2,

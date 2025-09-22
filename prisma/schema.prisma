@@ -265,11 +265,12 @@ model GalleryItem {
 
 model MediaCoverage {
   id              String     @id @default(auto()) @map("_id") @db.ObjectId
-  title           String     // Title of the media coverage
-  subtitle        String?    // Optional subtitle
-  authorName      String     // Name of the author or publication
+  image           String     // URL to the cover image
+  category        String
+  title           String?     // Title of the media coverage
   date            String     // Date of publication (as string for flexibility)
-  coverImage      String     // URL to the cover image
+  description     String   // Optional subtitle
+  link            String
   active          Boolean    @default(true)
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt

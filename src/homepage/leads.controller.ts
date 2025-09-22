@@ -52,15 +52,86 @@ export class LeadsController {
     @Post()
     @ApiOperation({
         summary: 'Submit a contact form',
-        description: 'Creates a new contact form submission. This endpoint is public and does not require authentication.',
+        description: 'Creates a new contact form submission with optional file upload. This endpoint is public and does not require authentication.',
+    })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                firstName: {
+                    type: 'string',
+                    description: 'First name of the person submitting the form',
+                    example: 'John',
+                },
+                lastName: {
+                    type: 'string',
+                    description: 'Last name of the person submitting the form',
+                    example: 'Doe',
+                },
+                email: {
+                    type: 'string',
+                    format: 'email',
+                    description: 'Email address of the person submitting the form',
+                    example: 'john.doe@example.com',
+                },
+                contactNumber: {
+                    type: 'string',
+                    description: 'Contact number of the person submitting the form',
+                    example: '+91 98765 43210',
+                },
+                personType: {
+                    type: 'string',
+                    description: 'Type of person submitting the form',
+                    example: 'Student',
+                },
+                interestedIn: {
+                    type: 'string',
+                    description: 'What the person is interested in',
+                    example: 'Research Collaboration',
+                },
+                message: {
+                    type: 'string',
+                    description: 'Message from the person submitting the form (optional)',
+                    example: 'I would like to inquire about your upcoming projects.',
+                },
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'File to upload (image or PDF, optional)',
+                },
+                links: {
+                    type: 'string',
+                    description: 'Links provided by the person submitting the form (optional)',
+                    example: 'https://example.com/myproject',
+                },
+            },
+            required: ['firstName', 'lastName', 'email', 'contactNumber', 'personType', 'interestedIn'],
+        },
     })
     @ApiResponse({
         status: HttpStatus.CREATED,
         description: 'The contact form has been submitted successfully',
     })
+    @UseInterceptors(FileInterceptor('file'))
     @HttpCode(HttpStatus.CREATED)
-    async create(@Body() createLeadDto: CreateLeadDto) {
-        return this.leadsService.create(createLeadDto);
+    async create(
+        @Body() body: any,
+        @UploadedFile() file?: Multer.File
+    ) {
+        // Parse form data properly
+        const createLeadDto: CreateLeadDto = {
+            firstName: body.firstName,
+            lastName: body.lastName,
+            email: body.email,
+            contactNumber: body.contactNumber,
+            personType: body.personType,
+            interestedIn: body.interestedIn,
+            message: body.message,
+            links: body.links,
+        };
+
+        return this.leadsService.create(createLeadDto, file);
     }
 
     /**
@@ -274,71 +345,4 @@ export class LeadsController {
         return this.leadsService.remove(id);
     }
 
-    /**
-     * Upload a file for contact form submission
-     * This endpoint is public and does not require authentication
-     */
-    @Post('upload-file')
-    @ApiOperation({
-        summary: 'Upload a file for contact form',
-        description: 'Uploads an image or PDF file for contact form submission. This endpoint is public and does not require authentication.',
-    })
-    @ApiConsumes('multipart/form-data')
-    @ApiBody({
-        schema: {
-            type: 'object',
-            properties: {
-                file: {
-                    type: 'string',
-                    format: 'binary',
-                    description: 'File to upload (image or PDF)',
-                },
-            },
-            required: ['file'],
-        },
-    })
-    @ApiResponse({
-        status: HttpStatus.CREATED,
-        description: 'File uploaded successfully',
-        schema: {
-            type: 'object',
-            properties: {
-                url: {
-                    type: 'string',
-                    example: '/assets/pdf/contact-attachment.pdf',
-                },
-                fileType: {
-                    type: 'string',
-                    example: 'pdf',
-                },
-            },
-        },
-    })
-    @UseInterceptors(FileInterceptor('file'))
-    async uploadFile(@UploadedFile() file: Multer.File) {
-        if (!file) {
-            throw new BadRequestException('No file provided');
-        }
-
-        // Check if it's a PDF or an image
-        const isPdf = file.mimetype === 'application/pdf';
-        const isImage = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype);
-
-        if (!isPdf && !isImage) {
-            throw new BadRequestException('Invalid file type. Only PDF or image files (JPEG, PNG, GIF, WebP) are allowed.');
-        }
-
-        let url: string;
-
-        if (isPdf) {
-            url = await this.fileUploadService.uploadPdf(file, `contact-attachment-${Date.now()}`);
-        } else {
-            url = await this.fileUploadService.uploadImage(file, `contact-attachment-${Date.now()}`);
-        }
-
-        return {
-            url,
-            fileType: isPdf ? 'pdf' : 'image'
-        };
-    }
 }

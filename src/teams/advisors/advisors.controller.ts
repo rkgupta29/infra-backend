@@ -52,32 +52,7 @@ export class AdvisorsController {
     return this.service.getAdvisors();
   }
 
-  /**
-   * Get all advisors with pagination (admin)
-   */
-  @Get('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'SUPERADMIN')
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({
-    summary: 'Get all advisors with pagination (admin)',
-    description: 'Admin endpoint to retrieve all advisors with pagination'
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Advisors retrieved successfully',
-  })
-  async getAllAdvisors(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('activeOnly', ParseBoolPipe) activeOnly?: boolean,
-  ) {
-    return this.service.findAll(
-      page ? +page : 1,
-      limit ? +limit : 10,
-      activeOnly || false
-    );
-  }
+
 
   /**
    * Get advisor by ID

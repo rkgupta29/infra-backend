@@ -58,13 +58,7 @@ export class CreateLeadDto {
     @IsString()
     message?: string;
 
-    @ApiPropertyOptional({
-        description: 'URL to the uploaded file (image or PDF)',
-        example: 'https://storage.example.com/uploads/file.pdf',
-    })
-    @IsOptional()
-    @IsString()
-    fileUrl?: string;
+    // fileUrl will be set automatically by the service after file upload
 
     @ApiPropertyOptional({
         description: 'Links provided by the person submitting the form',

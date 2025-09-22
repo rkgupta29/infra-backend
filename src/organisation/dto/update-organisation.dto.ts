@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateOrganisationDto {
   @ApiPropertyOptional({ description: 'Address', example: '123 Main St, City, Country' })
@@ -7,15 +7,15 @@ export class UpdateOrganisationDto {
   @IsString()
   address?: string;
 
-  @ApiPropertyOptional({ description: 'Emails', example: ['info@example.com', 'support@example.com'] })
+  @ApiPropertyOptional({ description: 'Email', example: 'info@example.com' })
   @IsOptional()
-  @IsArray()
-  emails?: string[];
+  @IsString()
+  email?: string;
 
-  @ApiPropertyOptional({ description: 'Phones', example: ['+1 555 1234', '+1 555 5678'] })
+  @ApiPropertyOptional({ description: 'Phone', example: '+1 555 1234' })
   @IsOptional()
-  @IsArray()
-  phones?: string[];
+  @IsString()
+  phone?: string;
 
   @ApiPropertyOptional({ description: 'Location map URL', example: 'https://maps.google.com/?q=...' })
   @IsOptional()
@@ -37,5 +37,3 @@ export class UpdateOrganisationDto {
   @IsString()
   mission?: string;
 }
-
-

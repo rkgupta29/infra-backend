@@ -231,12 +231,41 @@ export class AssociationsController {
     @ApiBearerAuth('JWT-auth')
     @ApiOperation({
         summary: 'Update an association',
-        description: 'Updates an association by ID. This endpoint requires ADMIN or SUPERADMIN authentication.',
+        description: 'Updates an association by ID with optional file upload. This endpoint requires ADMIN or SUPERADMIN authentication.',
     })
+    @ApiConsumes('multipart/form-data')
     @ApiParam({
         name: 'id',
         description: 'The ID of the association to update',
         example: '60d21b4667d0d8992e610c85',
+    })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                title: {
+                    type: 'string',
+                    description: 'Title of the association (optional)',
+                    example: 'Partner Organization',
+                },
+                order: {
+                    type: 'integer',
+                    description: 'Display order of the association (optional)',
+                    example: 1,
+                },
+                active: {
+                    type: 'boolean',
+                    description: 'Whether the association is active (optional)',
+                    example: true,
+                },
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'Image file to upload (optional)',
+                },
+            },
+            required: [],
+        },
     })
     @ApiResponse({
         status: HttpStatus.OK,
@@ -258,75 +287,24 @@ export class AssociationsController {
         status: HttpStatus.NOT_FOUND,
         description: 'Association not found',
     })
+    @UseInterceptors(FileInterceptor('file'))
     async update(
         @Param('id') id: string,
-        @Body() updateAssociationDto: UpdateAssociationDto,
+        @Body() body: any,
+        @UploadedFile() file?: Multer.File,
     ) {
-        return this.service.update(id, updateAssociationDto);
-    }
+        // Parse form data properly - all fields are optional
+        const updateAssociationDto: UpdateAssociationDto = {};
 
-    /**
-     * Update association image
-     * This endpoint requires authentication (ADMIN or SUPERADMIN)
-     */
-    @Put(':id/image')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('ADMIN', 'SUPERADMIN')
-    @ApiBearerAuth('JWT-auth')
-    @ApiOperation({
-        summary: 'Update association image',
-        description: 'Updates the image of an association by ID. This endpoint requires ADMIN or SUPERADMIN authentication.',
-    })
-    @ApiConsumes('multipart/form-data')
-    @ApiParam({
-        name: 'id',
-        description: 'The ID of the association to update image for',
-        example: '60d21b4667d0d8992e610c85',
-    })
-    @ApiBody({
-        schema: {
-            type: 'object',
-            properties: {
-                file: {
-                    type: 'string',
-                    format: 'binary',
-                    description: 'New image file to upload',
-                },
-            },
-            required: ['file'],
-        },
-    })
-    @ApiResponse({
-        status: HttpStatus.OK,
-        description: 'Association image updated successfully',
-    })
-    @ApiResponse({
-        status: HttpStatus.BAD_REQUEST,
-        description: 'Bad request',
-    })
-    @ApiResponse({
-        status: HttpStatus.UNAUTHORIZED,
-        description: 'Unauthorized',
-    })
-    @ApiResponse({
-        status: HttpStatus.FORBIDDEN,
-        description: 'Forbidden',
-    })
-    @ApiResponse({
-        status: HttpStatus.NOT_FOUND,
-        description: 'Association not found',
-    })
-    @UseInterceptors(FileInterceptor('file'))
-    async updateImage(
-        @Param('id') id: string,
-        @UploadedFile() file: Multer.File,
-    ) {
-        if (!file) {
-            throw new BadRequestException('Image file is required');
+        if (body.title !== undefined) updateAssociationDto.title = body.title;
+        if (body.order !== undefined) updateAssociationDto.order = parseInt(body.order, 10);
+        if (body.active !== undefined) {
+            updateAssociationDto.active = body.active === 'true' || body.active === true;
         }
 
-        return this.service.updateImage(id, file);
+        return this.service.update(id, updateAssociationDto, file);
     }
+
 
     /**
      * Toggle association active status
