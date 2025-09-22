@@ -2,10 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsOptional, IsBoolean, IsNumber, Min } from 'class-validator';
 
 export class CreateTrusteeDto {
-    @ApiProperty({ description: 'URL to the trustee\'s image' })
-    @IsNotEmpty()
+    @ApiPropertyOptional({ description: 'URL to the trustee\'s image (optional, can be uploaded via file)' })
+    @IsOptional()
     @IsString()
-    image: string;
+    image?: string;
 
     @ApiProperty({ description: 'Name of the trustee' })
     @IsNotEmpty()

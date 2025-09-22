@@ -83,13 +83,19 @@ export class NewsletterService {
         throw new BadRequestException('PDF file is required');
       }
 
-      // Create newsletter with file URLs
+      // Ensure title is always a string (assign empty string if not provided)
+      const title = createNewsletterDto.title && createNewsletterDto.title.trim() !== ''
+        ? createNewsletterDto.title
+        : '';
+
       return this.prisma.newsletter.create({
         data: {
           ...createNewsletterDto,
+          title, // Use the guaranteed string value
           publishedDate,
           coverImage: coverImageUrl,
           fileUrl: fileUrl,
+          active: createNewsletterDto.active !== undefined ? createNewsletterDto.active : true,
         },
       });
     } catch (error) {
@@ -252,7 +258,6 @@ export class NewsletterService {
       // Prepare data for update
       const data: any = { ...updateNewsletterDto };
 
-      // Convert publishedDate from string to Date if provided
       if (updateNewsletterDto.publishedDate) {
         data.publishedDate = new Date(updateNewsletterDto.publishedDate);
       }
@@ -260,6 +265,22 @@ export class NewsletterService {
       // Preserve existing active status if not provided in the update
       if (data.active === undefined) {
         data.active = existingNewsletter.active;
+      }
+      // Remove publishedDate from data if it's empty or falsy to avoid errors
+      if (!updateNewsletterDto.publishedDate) {
+        delete data.publishedDate;
+      }
+      if (!updateNewsletterDto.title) {
+        delete data.title;
+      }
+      if (!updateNewsletterDto.subtitle) {
+        delete data.subtitle;
+      }
+      if (!updateNewsletterDto.version) {
+        delete data.version;
+      }
+      if (!updateNewsletterDto.fileUrl) {
+        delete data.fileUrl;
       }
 
       // Handle file uploads if provided

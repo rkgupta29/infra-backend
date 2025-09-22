@@ -2,10 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsOptional, IsBoolean, IsNumber, Min } from 'class-validator';
 
 export class CreateTeamDto {
-    @ApiProperty({ description: 'URL to the team member\'s image' })
-    @IsNotEmpty()
+    @ApiPropertyOptional({ description: 'URL to the team member\'s image (optional, can be uploaded via file)' })
+    @IsOptional()
     @IsString()
-    image: string;
+    image?: string;
 
     @ApiProperty({ description: 'Name of the team member' })
     @IsNotEmpty()

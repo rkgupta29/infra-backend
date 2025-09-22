@@ -76,7 +76,7 @@ export class NewsletterController {
         },
         title: {
           type: 'string',
-          description: 'The title of the newsletter',
+          description: 'The title of the newsletter (optional, defaults to empty string)',
         },
         subtitle: {
           type: 'string',
@@ -95,7 +95,7 @@ export class NewsletterController {
           description: 'Whether the newsletter is active',
         },
       },
-      required: ['title', 'version', 'publishedDate', 'coverImageFile', 'pdfFile'],
+      required: ['version', 'publishedDate', 'coverImageFile', 'pdfFile'],
     },
   })
   @ApiResponse({
@@ -343,23 +343,23 @@ export class NewsletterController {
         },
         title: {
           type: 'string',
-          description: 'The title of the newsletter',
+          description: 'The title of the newsletter (optional)',
         },
         subtitle: {
           type: 'string',
-          description: 'The subtitle of the newsletter',
+          description: 'The subtitle of the newsletter (optional)',
         },
         version: {
           type: 'string',
-          description: 'The version of the newsletter (e.g., "Vol. 1, Issue 2")',
+          description: 'The version of the newsletter (optional)',
         },
         publishedDate: {
           type: 'string',
-          description: 'The publication date of the newsletter (YYYY-MM-DD)',
+          description: 'The publication date of the newsletter (optional)',
         },
         active: {
           type: 'boolean',
-          description: 'Whether the newsletter is active',
+          description: 'Whether the newsletter is active (optional)',
         },
       },
       required: [],

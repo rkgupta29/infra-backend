@@ -9,7 +9,9 @@ import {
   Query,
   UseGuards,
   HttpCode,
-  HttpStatus
+  HttpStatus,
+  UseInterceptors,
+  UploadedFiles
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -17,8 +19,12 @@ import {
   ApiTags,
   ApiParam,
   ApiQuery,
-  ApiBearerAuth
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody
 } from '@nestjs/swagger';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import type { Multer } from 'multer';
 import { PatronsService } from './patrons.service';
 import { CreatePatronDto, UpdatePatronDto, PatronQueryDto } from './dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -74,10 +80,62 @@ export class PatronsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
   @ApiBearerAuth('JWT-auth')
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Create a new patron',
-    description: 'Creates a new patron. Requires admin authentication.'
+    description: 'Creates a new patron with image upload. Requires admin authentication.'
   })
+  @ApiBody({
+    description: 'Patron data with image upload',
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Patron image file (optional)',
+        },
+        popupImg: {
+          type: 'string',
+          format: 'binary',
+          description: 'Patron popup image file (optional)',
+        },
+        title: {
+          type: 'string',
+          description: 'Patron name',
+        },
+        desig: {
+          type: 'string',
+          description: 'Patron designation',
+        },
+        popupdesc: {
+          type: 'string',
+          description: 'Patron description',
+        },
+        link: {
+          type: 'string',
+          description: 'Social media profile link (optional)',
+        },
+        socialMedia: {
+          type: 'string',
+          description: 'Social media platform (optional)',
+        },
+        order: {
+          type: 'number',
+          description: 'Order for sorting patrons (optional)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the patron is active (optional)',
+        },
+      },
+      required: ['title', 'desig', 'popupdesc'],
+    },
+  })
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+    { name: 'popupImg', maxCount: 1 },
+  ]))
   @ApiResponse({
     status: 201,
     description: 'Patron created successfully',
@@ -90,17 +148,24 @@ export class PatronsController {
     status: 403,
     description: 'Forbidden',
   })
-  async createPatron(@Body() body: any) {
+  async createPatron(
+    @Body() body: any,
+    @UploadedFiles() files: { image?: Array<Multer.File>, popupImg?: Array<Multer.File> }
+  ) {
     // Parse form data properly
-    const data: CreatePatronDto = {
+    const createPatronDto: CreatePatronDto = {
       ...body,
+      // Parse numeric fields
+      order: body.order ? parseInt(body.order, 10) : undefined,
       // Parse active as boolean if provided
-      active: body.active === undefined ? undefined : body.active === 'true' || body.active === true,
-      // Parse order as number if provided
-      order: body.order !== undefined ? parseInt(body.order, 10) : undefined
+      active: body.active === undefined ? undefined : body.active === 'true' || body.active === true
     };
 
-    return this.service.createPatron(data);
+    return this.service.createPatron(
+      createPatronDto,
+      files.image?.[0],
+      files.popupImg?.[0]
+    );
   }
 
   /**
@@ -110,11 +175,63 @@ export class PatronsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
   @ApiBearerAuth('JWT-auth')
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Update a patron',
-    description: 'Updates an existing patron by ID. Requires admin authentication.'
+    description: 'Updates an existing patron by ID with optional image upload. Requires admin authentication.'
   })
   @ApiParam({ name: 'id', description: 'Patron ID' })
+  @ApiBody({
+    description: 'Patron data with optional image upload',
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Patron image file (optional)',
+        },
+        popupImg: {
+          type: 'string',
+          format: 'binary',
+          description: 'Patron popup image file (optional)',
+        },
+        title: {
+          type: 'string',
+          description: 'Patron name (optional)',
+        },
+        desig: {
+          type: 'string',
+          description: 'Patron designation (optional)',
+        },
+        popupdesc: {
+          type: 'string',
+          description: 'Patron description (optional)',
+        },
+        link: {
+          type: 'string',
+          description: 'Social media profile link (optional)',
+        },
+        socialMedia: {
+          type: 'string',
+          description: 'Social media platform (optional)',
+        },
+        order: {
+          type: 'number',
+          description: 'Order for sorting patrons (optional)',
+        },
+        active: {
+          type: 'boolean',
+          description: 'Whether the patron is active (optional)',
+        },
+      },
+      required: [],
+    },
+  })
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+    { name: 'popupImg', maxCount: 1 },
+  ]))
   @ApiResponse({
     status: 200,
     description: 'Patron updated successfully',
@@ -131,30 +248,37 @@ export class PatronsController {
     status: 404,
     description: 'Patron not found',
   })
-  async updatePatron(@Param('id') id: string, @Body() body: any) {
+  async updatePatron(
+    @Param('id') id: string,
+    @Body() body: any,
+    @UploadedFiles() files: { image?: Array<Multer.File>, popupImg?: Array<Multer.File> }
+  ) {
     // Parse form data properly
-    const data: UpdatePatronDto = {};
+    const updatePatronDto: UpdatePatronDto = {};
 
     // Only add fields that are explicitly provided
-    if (body.image !== undefined) data.image = body.image;
-    if (body.title !== undefined) data.title = body.title;
-    if (body.desig !== undefined) data.desig = body.desig;
-    if (body.popupImg !== undefined) data.popupImg = body.popupImg;
-    if (body.popupdesc !== undefined) data.popupdesc = body.popupdesc;
-    if (body.link !== undefined) data.link = body.link;
-    if (body.socialMedia !== undefined) data.socialMedia = body.socialMedia;
+    if (body.title !== undefined) updatePatronDto.title = body.title;
+    if (body.desig !== undefined) updatePatronDto.desig = body.desig;
+    if (body.popupdesc !== undefined) updatePatronDto.popupdesc = body.popupdesc;
+    if (body.link !== undefined) updatePatronDto.link = body.link;
+    if (body.socialMedia !== undefined) updatePatronDto.socialMedia = body.socialMedia;
 
-    // Parse order as number if provided
+    // Parse numeric fields
     if (body.order !== undefined) {
-      data.order = parseInt(body.order, 10);
+      updatePatronDto.order = parseInt(body.order, 10);
     }
 
     // Parse active as boolean if provided
     if (body.active !== undefined) {
-      data.active = body.active === 'true' || body.active === true;
+      updatePatronDto.active = body.active === 'true' || body.active === true;
     }
 
-    return this.service.updatePatron(id, data);
+    return this.service.updatePatron(
+      id,
+      updatePatronDto,
+      files.image?.[0],
+      files.popupImg?.[0]
+    );
   }
 
   /**

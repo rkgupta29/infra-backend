@@ -2,13 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateNewsletterDto {
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'Title of the newsletter',
         example: 'Infrastructure Insights',
     })
-    @IsNotEmpty({ message: 'Title is required' })
+    @IsOptional()
     @IsString()
-    title: string;
+    title?: string;
 
     @ApiPropertyOptional({
         description: 'Subtitle of the newsletter',

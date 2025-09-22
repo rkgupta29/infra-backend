@@ -2,10 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsOptional, IsBoolean, IsNumber, Min } from 'class-validator';
 
 export class CreatePatronDto {
-    @ApiProperty({ description: 'URL to the patron\'s image' })
-    @IsNotEmpty()
+    @ApiPropertyOptional({ description: 'URL to the patron\'s image (optional, can be uploaded via file)' })
+    @IsOptional()
     @IsString()
-    image: string;
+    image?: string;
 
     @ApiProperty({ description: 'Name of the patron' })
     @IsNotEmpty()

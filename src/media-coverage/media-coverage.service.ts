@@ -268,21 +268,22 @@ export class MediaCoverageService {
       };
 
       // Filter only upcoming items
-      const upcomingItems = allItems.filter((item) => {
+      const upcomingItems = allItems.filter((item: any) => {
         const itemDate = parseDate(item.date);
         return itemDate >= today;
       });
 
       // Sort ascending (closest first)
       upcomingItems.sort(
-        (a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime(),
+        (a: any, b: any) => parseDate(a.date).getTime() - parseDate(b.date).getTime(),
       );
 
-      const closest = upcomingItems.length > 0 ? upcomingItems[0] : null;
+      // Get up to the last three closest items
+      const closestItems = upcomingItems.slice(0, 3);
 
       return {
-        data: closest ? [closest] : [],
-        count: closest ? 1 : 0,
+        data: closestItems,
+        count: closestItems.length,
         lastUpdated: new Date().toISOString(),
       };
     } catch (error: any) {
