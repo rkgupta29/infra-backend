@@ -20,7 +20,7 @@ import {
   ApiBody
 } from '@nestjs/swagger';
 import { EngagementsService } from './engagements.service';
-import { CreateEngagementDto, UpdateEngagementDto, QueryEngagementsDto } from './dto';
+import { CreateEngagementDto, UpdateEngagementDto, QueryEngagementsDto, EventResponseDto, PaginatedEventsResponseDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -36,11 +36,12 @@ export class EngagementsController {
   @Get()
   @ApiOperation({
     summary: 'Get all engagements',
-    description: 'Retrieves all engagements with optional filtering and pagination.'
+    description: 'Retrieves all engagements with optional filtering and pagination. Returns events in the new Event schema format.'
   })
   @ApiResponse({
     status: 200,
-    description: 'Engagements retrieved successfully',
+    description: 'Engagements retrieved successfully with Event schema format',
+    type: PaginatedEventsResponseDto,
   })
   async findAll(@Query() queryParams: QueryEngagementsDto) {
     return this.engagementsService.findAll(queryParams);
@@ -68,11 +69,38 @@ export class EngagementsController {
   @Get('primary')
   @ApiOperation({
     summary: 'Get primary event',
-    description: 'Retrieves the closest upcoming event or most recent past event if no upcoming events exist.'
+    description: 'Retrieves the closest upcoming event or most recent past event if no upcoming events exist. Returns event in the new Event schema format.'
   })
   @ApiResponse({
     status: 200,
-    description: 'Primary event retrieved successfully',
+    description: 'Primary event retrieved successfully in Event schema format',
+    schema: {
+      type: 'object',
+      properties: {
+        event: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            date: { type: 'string', example: '2025-09-19' },
+            dayTime: { type: 'string', example: 'Monday, 10:00 AM - 12:00 PM' },
+            meetingType: { type: 'string', example: 'Webinar | Workshop | Event | Meeting' },
+            desc: { type: 'string', example: 'Short summary of the event' },
+            ctaText: { type: 'string', example: 'Register Now' },
+            details: {
+              type: 'object',
+              properties: {
+                images: { type: 'array', items: { type: 'object' } },
+                date: { type: 'string' },
+                content: { type: 'string' },
+                cta: { type: 'object' }
+              }
+            }
+          }
+        },
+        type: { type: 'string', enum: ['upcoming', 'recent'] },
+        lastUpdated: { type: 'string' }
+      }
+    }
   })
   async getPrimaryEvent() {
     return this.engagementsService.getPrimaryEvent();
@@ -142,7 +170,8 @@ export class EngagementsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Engagement retrieved successfully',
+    description: 'Engagement retrieved successfully in Event schema format',
+    type: EventResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -166,7 +195,8 @@ export class EngagementsController {
   @ApiBody({ type: CreateEngagementDto })
   @ApiResponse({
     status: 201,
-    description: 'Engagement created successfully',
+    description: 'Engagement created successfully in Event schema format',
+    type: EventResponseDto,
   })
   async create(@Body() createEngagementDto: CreateEngagementDto) {
     return this.engagementsService.create(createEngagementDto);
@@ -190,7 +220,8 @@ export class EngagementsController {
   @ApiBody({ type: UpdateEngagementDto })
   @ApiResponse({
     status: 200,
-    description: 'Engagement updated successfully',
+    description: 'Engagement updated successfully in Event schema format',
+    type: EventResponseDto,
   })
   @ApiResponse({
     status: 404,

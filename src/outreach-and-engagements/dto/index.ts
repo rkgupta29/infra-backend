@@ -4,3 +4,4 @@ export * from './query-engagements.dto';
 export * from './engagement-details.dto';
 export * from './engagement-image.dto';
 export * from './engagement-cta.dto';
+export * from './event-response.dto';

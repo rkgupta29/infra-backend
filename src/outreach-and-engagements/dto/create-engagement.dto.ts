@@ -13,6 +13,14 @@ export class CreateEngagementDto {
     date: string;
 
     @ApiProperty({
+        description: 'Day and time of the engagement',
+        example: 'Monday, 10:00 AM - 12:00 PM',
+    })
+    @IsNotEmpty()
+    @IsString()
+    dayTime: string;
+
+    @ApiProperty({
         description: 'Type of meeting',
         example: 'Webinar | Workshop | Event | Meeting',
     })
@@ -26,18 +34,18 @@ export class CreateEngagementDto {
     })
     @IsNotEmpty()
     @IsString()
-    description: string;
+    desc: string;
 
-    @ApiPropertyOptional({
+    @ApiProperty({
         description: 'Call to action text for the main button',
         example: 'Register Now',
     })
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
-    ctaText?: string;
+    ctaText: string;
 
     @ApiProperty({
-        description: 'Detailed information including images, content, and CTA',
+        description: 'Detailed information including images, date, content, and CTA',
         type: EngagementDetailsDto,
     })
     @ValidateNested()

@@ -14,26 +14,85 @@ export class EngagementsService {
   constructor(private readonly prisma: PrismaService) { }
 
   /**
+   * Transform engagement response to ensure consistent API format
+   * @param engagement - Raw engagement from database
+   * @returns Transformed engagement with new Event schema
+   */
+  private transformEngagementResponse(engagement: any) {
+    // Handle backward compatibility
+    const dayTime = engagement.dayTime || 'Time not specified';
+    const desc = engagement.desc || engagement.description || 'No description available';
+    const ctaText = engagement.ctaText || 'Learn More';
+
+    // Ensure details have the required structure
+    let details = engagement.details || {};
+    if (typeof details === 'string') {
+      try {
+        details = JSON.parse(details);
+      } catch {
+        details = {};
+      }
+    }
+
+    // Ensure details.date exists
+    if (!details.date) {
+      details.date = engagement.date;
+    }
+
+    // Ensure details has required structure
+    const processedDetails = {
+      images: details.images || [],
+      date: details.date,
+      content: details.content || desc,
+      cta: details.cta || {
+        ctaText: ctaText,
+        link: details.link || '#'
+      }
+    };
+
+    return {
+      id: engagement.id,
+      date: engagement.date,
+      dayTime: dayTime,
+      meetingType: engagement.meetingType,
+      desc: desc,
+      ctaText: ctaText,
+      details: processedDetails,
+      active: engagement.active,
+      createdAt: engagement.createdAt,
+      updatedAt: engagement.updatedAt,
+    };
+  }
+
+  /**
    * Create a new engagement
    * @param createEngagementDto - Data for the new engagement
    * @returns The created engagement
    */
   async create(createEngagementDto: CreateEngagementDto) {
     try {
+      // Ensure details have the required structure
+      const processedDetails = {
+        ...createEngagementDto.details,
+        // Ensure details.date exists
+        date: createEngagementDto.details.date || createEngagementDto.date,
+      };
+
       // Make sure the data structure matches the Prisma schema
       const engagement = await (this.prisma as ExtendedPrismaService).engagement.create({
         data: {
           date: createEngagementDto.date,
+          dayTime: createEngagementDto.dayTime,
           meetingType: createEngagementDto.meetingType,
-          description: createEngagementDto.description,
+          desc: createEngagementDto.desc,
           ctaText: createEngagementDto.ctaText,
-          details: createEngagementDto.details,
+          details: processedDetails,
           active: createEngagementDto.active ?? true,
         },
       });
 
       this.logger.log(`Created new engagement for date: ${createEngagementDto.date}`);
-      return engagement;
+      return this.transformEngagementResponse(engagement);
     } catch (error) {
       this.logger.error(`Failed to create engagement: ${error.message}`);
       throw error;
@@ -98,8 +157,13 @@ export class EngagementsService {
       const hasNext = page < totalPages;
       const hasPrevious = page > 1;
 
+      // Transform all engagements to ensure consistent format
+      const transformedEngagements = engagements.map(engagement =>
+        this.transformEngagementResponse(engagement)
+      );
+
       return {
-        data: engagements,
+        data: transformedEngagements,
         meta: {
           total,
           page,
@@ -161,8 +225,13 @@ export class EngagementsService {
         orderBy: { date: 'desc' },
       });
 
+      // Transform all engagements to ensure consistent format
+      const transformedEngagements = engagements.map(engagement =>
+        this.transformEngagementResponse(engagement)
+      );
+
       return {
-        data: engagements,
+        data: transformedEngagements,
         year,
         count: engagements.length,
         lastUpdated: new Date().toISOString(),
@@ -198,8 +267,13 @@ export class EngagementsService {
         orderBy: { date: 'asc' },
       });
 
+      // Transform all engagements to ensure consistent format
+      const transformedEngagements = engagements.map(engagement =>
+        this.transformEngagementResponse(engagement)
+      );
+
       return {
-        data: engagements,
+        data: transformedEngagements,
         year,
         month,
         count: engagements.length,
@@ -226,7 +300,7 @@ export class EngagementsService {
         throw new NotFoundException(`Engagement with ID ${id} not found`);
       }
 
-      return engagement;
+      return this.transformEngagementResponse(engagement);
     } catch (error) {
       this.logger.error(`Failed to fetch engagement ${id}: ${error.message}`);
       throw error;
@@ -249,10 +323,19 @@ export class EngagementsService {
 
       // Only include fields that are present in the DTO
       if (updateEngagementDto.date !== undefined) data.date = updateEngagementDto.date;
+      if (updateEngagementDto.dayTime !== undefined) data.dayTime = updateEngagementDto.dayTime;
       if (updateEngagementDto.meetingType !== undefined) data.meetingType = updateEngagementDto.meetingType;
-      if (updateEngagementDto.description !== undefined) data.description = updateEngagementDto.description;
+      if (updateEngagementDto.desc !== undefined) data.desc = updateEngagementDto.desc;
       if (updateEngagementDto.ctaText !== undefined) data.ctaText = updateEngagementDto.ctaText;
-      if (updateEngagementDto.details !== undefined) data.details = updateEngagementDto.details;
+      if (updateEngagementDto.details !== undefined) {
+        // Ensure details have the required structure
+        const processedDetails = {
+          ...updateEngagementDto.details,
+          // Ensure details.date exists
+          date: updateEngagementDto.details.date || updateEngagementDto.date || data.date,
+        };
+        data.details = processedDetails;
+      }
       if (updateEngagementDto.active !== undefined) data.active = updateEngagementDto.active;
 
       const updatedEngagement = await (this.prisma as ExtendedPrismaService).engagement.update({
@@ -261,7 +344,7 @@ export class EngagementsService {
       });
 
       this.logger.log(`Updated engagement: ${id}`);
-      return updatedEngagement;
+      return this.transformEngagementResponse(updatedEngagement);
     } catch (error) {
       this.logger.error(`Failed to update engagement ${id}: ${error.message}`);
       throw error;
@@ -332,14 +415,14 @@ export class EngagementsService {
         const recentEvent = recentEvents.length > 0 ? recentEvents[0] : null;
 
         return {
-          event: recentEvent,
+          event: recentEvent ? this.transformEngagementResponse(recentEvent) : null,
           type: 'recent',
           lastUpdated: new Date().toISOString(),
         };
       }
 
       return {
-        event: upcomingEvent,
+        event: upcomingEvent ? this.transformEngagementResponse(upcomingEvent) : null,
         type: 'upcoming',
         lastUpdated: new Date().toISOString(),
       };

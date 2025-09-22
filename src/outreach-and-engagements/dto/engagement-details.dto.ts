@@ -15,6 +15,14 @@ export class EngagementDetailsDto {
     images: EngagementImageDto[];
 
     @ApiProperty({
+        description: 'Date string for the event details',
+        example: '2025-09-19',
+    })
+    @IsNotEmpty()
+    @IsString()
+    date: string;
+
+    @ApiProperty({
         description: 'Full details about the event (long description, agenda, etc.)',
         example: 'Full details about the event (long description, agenda, etc.)',
     })

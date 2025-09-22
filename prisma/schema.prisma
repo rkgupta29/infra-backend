@@ -377,10 +377,12 @@ model Association {
 model Engagement {
   id          String     @id @default(auto()) @map("_id") @db.ObjectId
   date        String     // Date of the engagement in YYYY-MM-DD format
+  dayTime     String?    // Day and time of the engagement (optional for backward compatibility)
   meetingType String     // Type of meeting (e.g., "Webinar | Workshop | Event | Meeting")
-  description String     // Short summary of the event
-  ctaText     String?    // Call to action text for the main button
-  details     Json       // Detailed information including images, content, and CTA
+  desc        String?    // Short summary of the event (optional for backward compatibility)
+  description String?    // Legacy field for backward compatibility
+  ctaText     String?    // Call to action text for the main button (optional for backward compatibility)
+  details     Json       // Detailed information including images, date, content, and CTA
   active      Boolean    @default(true)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
