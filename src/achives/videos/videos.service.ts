@@ -79,12 +79,14 @@ export class VideosService {
   }
 
   /**
-   * Get all videos
+   * Get all videos with pagination
    * @param activeOnly - If true, returns only active videos
    * @param categoryId - Optional category ID to filter by
-   * @returns Array of all videos
+   * @param page - Page number (starts from 1)
+   * @param limit - Number of items per page
+   * @returns Paginated array of videos
    */
-  async findAll(activeOnly = false, categoryId?: string) {
+  async findAll(activeOnly = false, categoryId?: string, page = 1, limit = 10) {
     const where: any = {};
 
     // Filter by active status if requested
@@ -99,17 +101,37 @@ export class VideosService {
       };
     }
 
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const total = await (this.prisma as ExtendedPrismaService).video.count({ where });
+
+    // Get the videos with pagination
     const videos = await (this.prisma as ExtendedPrismaService).video.findMany({
       where,
+      skip,
+      take: limit,
       orderBy: { date: 'desc' },
       include: {
         categories: true, // Include related categories
       },
     });
 
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(total / limit);
+    const hasNext = page < totalPages;
+    const hasPrevious = page > 1;
+
     return {
-      videos,
-      totalCount: videos.length,
+      data: videos,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext,
+        hasPrevious,
+      },
       lastUpdated: new Date().toISOString()
     };
   }
@@ -242,13 +264,15 @@ export class VideosService {
    * Get videos by category
    * @param categoryId - The ID of the category to filter by
    * @param activeOnly - If true, returns only active videos
+   * @param page - Page number (starts from 1)
+   * @param limit - Number of items per page
    * @returns Array of videos in the specified category
    */
-  async getVideosByCategory(categoryId: string, activeOnly = false) {
+  async getVideosByCategory(categoryId: string, activeOnly = false, page = 1, limit = 10) {
     // Verify category exists
     await this.categoriesService.findOne(categoryId);
 
-    return this.findAll(activeOnly, categoryId);
+    return this.findAll(activeOnly, categoryId, page, limit);
   }
 
 }

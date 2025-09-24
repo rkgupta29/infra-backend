@@ -33,6 +33,7 @@ import type { Multer } from 'multer';
 import { VideosService } from './videos.service';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
+import { PaginationDto } from './dto/pagination.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -229,6 +230,20 @@ export class VideosController {
     type: String,
     description: 'Optional category ID to filter videos by',
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (starts from 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+    example: 10,
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'All videos retrieved successfully',
@@ -236,8 +251,10 @@ export class VideosController {
   findAll(
     @Query('activeOnly') activeOnly?: boolean,
     @Query('categoryId') categoryId?: string,
+    @Query() paginationDto?: PaginationDto,
   ) {
-    return this.videosService.findAll(activeOnly === true, categoryId);
+    const { page = 1, limit = 10 } = paginationDto || {};
+    return this.videosService.findAll(activeOnly === true, categoryId, page, limit);
   }
 
   /**
@@ -259,6 +276,20 @@ export class VideosController {
     type: Boolean,
     description: 'If true, returns only active videos',
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (starts from 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+    example: 10,
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Videos in category retrieved successfully',
@@ -269,8 +300,10 @@ export class VideosController {
   getVideosByCategory(
     @Param('categoryId') categoryId: string,
     @Query('activeOnly') activeOnly?: boolean,
+    @Query() paginationDto?: PaginationDto,
   ) {
-    return this.videosService.getVideosByCategory(categoryId, activeOnly === true);
+    const { page = 1, limit = 10 } = paginationDto || {};
+    return this.videosService.getVideosByCategory(categoryId, activeOnly === true, page, limit);
   }
 
 
